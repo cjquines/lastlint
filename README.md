@@ -1,4 +1,4 @@
-# evan-latex-pre-commit
+# otis-latex-linter
 
 A linter for [Evan Chen's LaTeX style guide](https://web.evanchen.cc/latex-style-guide.html),
 packaged as a [pre-commit](https://pre-commit.com/) hook.
@@ -9,10 +9,10 @@ Add to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: https://github.com/cjquines/evan-latex-pre-commit
+  - repo: https://github.com/cjquines/otis-latex-linter
     rev: v0.1.0
     hooks:
-      - id: evan-latex-lint
+      - id: otis-latex-lint
 ```
 
 Also recommended (cover rules this linter does not):
@@ -30,7 +30,7 @@ Also recommended (cover rules this linter does not):
 
 ```sh
 pip install .
-evan-latex-lint path/to/file.tex
+otis-latex-lint path/to/file.tex
 ```
 
 Output format is `file:line:col: EXXX: message`, parseable by editors.
@@ -60,7 +60,7 @@ already-correctly-indented or deeper lines are left alone).
 
 E013 applies to a conservative allowlist of envs (`align`, `itemize`,
 `enumerate`, `proof`, `theorem`, matrices, etc.); other envs are not
-checked. See `INDENT_ENVS` in `evan_latex_lint.py` to adjust.
+checked. See `INDENT_ENVS` in `otis_latex_lint.py` to adjust.
 
 Rules **not** implemented:
 

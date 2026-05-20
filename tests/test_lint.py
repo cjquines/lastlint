@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from evan_latex_lint import find_inline_math, fix_text, lint_text, mask_verbatim
+from otis_latex_lint import find_inline_math, fix_text, lint_text, mask_verbatim
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

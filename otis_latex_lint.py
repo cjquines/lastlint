@@ -600,7 +600,7 @@ def lint_file(path: Path) -> list[Finding]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
-        prog="evan-latex-lint",
+        prog="otis-latex-lint",
         description="Lint .tex files against Evan Chen's LaTeX style guide.",
     )
     ap.add_argument("files", nargs="+", type=Path)
