@@ -35,6 +35,10 @@ evan-latex-lint path/to/file.tex
 
 Output format is `file:line:col: EXXX: message`, parseable by editors.
 
+Pass `--fix` to auto-fix supported rules in place. Currently fixed: `E013`
+(under-indented lines inside indent envs are padded to `2 * depth` spaces;
+already-correctly-indented or deeper lines are left alone).
+
 ## Rules
 
 | ID   | Rule from style guide                         |

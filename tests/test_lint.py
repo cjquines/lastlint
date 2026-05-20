@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from evan_latex_lint import find_inline_math, lint_text, mask_verbatim
+from evan_latex_lint import find_inline_math, fix_text, lint_text, mask_verbatim
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -90,3 +90,48 @@ def test_dollar_in_asy_is_not_flagged():
 )
 def test_individual_rule(snippet: str, rule: str):
     assert rule in rules(snippet)
+
+
+def test_fix_E013_pads_under_indented_lines():
+    text = "\\begin{itemize}\n\\ii bad indent here\n\\end{itemize}\n"
+    fixed = fix_text(text)
+    assert fixed == "\\begin{itemize}\n  \\ii bad indent here\n\\end{itemize}\n"
+    assert "E013" not in rules(fixed)
+
+
+def test_fix_E013_preserves_deeper_indent():
+    text = "\\begin{itemize}\n      \\ii deep\n\\end{itemize}\n"
+    assert fix_text(text) == text
+
+
+def test_fix_E013_handles_nesting():
+    text = (
+        "\\begin{itemize}\n"
+        "\\ii outer\n"
+        "\\begin{enumerate}\n"
+        "\\ii inner\n"
+        "\\end{enumerate}\n"
+        "\\end{itemize}\n"
+    )
+    fixed = fix_text(text)
+    assert fixed == (
+        "\\begin{itemize}\n"
+        "  \\ii outer\n"
+        "  \\begin{enumerate}\n"
+        "    \\ii inner\n"
+        "  \\end{enumerate}\n"
+        "\\end{itemize}\n"
+    )
+    assert "E013" not in rules(fixed)
+
+
+def test_fix_E013_skips_verbatim():
+    text = "\\begin{itemize}\n\\begin{verbatim}\nfoo\n\\end{verbatim}\n\\end{itemize}\n"
+    fixed = fix_text(text)
+    # verbatim body line must be untouched (no leading spaces added)
+    assert "\nfoo\n" in fixed
+
+
+def test_fix_is_idempotent_on_clean_fixture():
+    text = (FIXTURES / "clean.tex").read_text()
+    assert fix_text(text) == text

@@ -385,6 +385,46 @@ def rule_E017_colon(src: Source) -> Iterator[Finding]:
                 )
 
 
+def fix_E013_indentation(src: Source) -> str:
+    """Pad under-indented lines inside INDENT_ENVS to ``2 * depth`` spaces.
+
+    Lines already at or beyond the expected indent are left untouched, so
+    deeper hand-alignment (e.g. continuation lines) is preserved.
+    """
+    out: list[str] = []
+    depth = 0
+    for i, line in enumerate(src.masked_lines, 1):
+        raw = src.lines[i - 1]
+        first_token = _BEGIN_END_RE.search(line)
+        line_starts_with_end = bool(
+            re.match(r"\s*\\end\{", line)
+            and first_token
+            and first_token.group(1) == "end"
+        )
+        effective_depth = depth - 1 if line_starts_with_end else depth
+
+        if effective_depth > 0 and raw.strip() and i not in src.verbatim_lines:
+            indent = len(raw) - len(raw.lstrip(" "))
+            expected = 2 * effective_depth
+            if indent < expected:
+                raw = " " * expected + raw.lstrip(" ")
+
+        out.append(raw)
+
+        for m in _BEGIN_END_RE.finditer(line):
+            kind, env = m.group(1), m.group(2)
+            if env in INDENT_ENVS:
+                depth += 1 if kind == "begin" else -1
+        if depth < 0:
+            depth = 0
+    return "\n".join(out)
+
+
+FIXERS: dict[str, Callable[[Source], str]] = {
+    "E013": fix_E013_indentation,
+}
+
+
 RULES: list[Callable[[Source], Iterator[Finding]]] = [
     rule_E001_line_length,
     rule_E002_literal_quote,
@@ -419,12 +459,23 @@ def lint_text(text: str) -> list[Finding]:
     return findings
 
 
-def lint_file(path: Path) -> list[Finding]:
+def fix_text(text: str) -> str:
+    """Apply every available fixer in turn. Idempotent on clean input."""
+    for fixer in FIXERS.values():
+        src = Source(text)
+        text = fixer(src)
+    return text
+
+
+def read_text(path: Path) -> str:
     try:
-        text = path.read_text(encoding="utf-8")
+        return path.read_text(encoding="utf-8")
     except UnicodeDecodeError:
-        text = path.read_text(encoding="latin-1")
-    return lint_text(text)
+        return path.read_text(encoding="latin-1")
+
+
+def lint_file(path: Path) -> list[Finding]:
+    return lint_text(read_text(path))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -433,10 +484,21 @@ def main(argv: list[str] | None = None) -> int:
         description="Lint .tex files against Evan Chen's LaTeX style guide.",
     )
     ap.add_argument("files", nargs="+", type=Path)
+    ap.add_argument(
+        "--fix",
+        action="store_true",
+        help=f"auto-fix rules where possible ({', '.join(sorted(FIXERS))}); "
+        "writes files in place",
+    )
     args = ap.parse_args(argv)
 
     bad = 0
     for path in args.files:
+        if args.fix:
+            original = read_text(path)
+            fixed = fix_text(original)
+            if fixed != original:
+                path.write_text(fixed, encoding="utf-8")
         for f in lint_file(path):
             print(f.format(str(path)))
             bad += 1
