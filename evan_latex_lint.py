@@ -385,6 +385,118 @@ def rule_E017_colon(src: Source) -> Iterator[Finding]:
                 )
 
 
+def _apply_line_edits(raw: str, edits: list[tuple[int, int, str]]) -> str:
+    """Apply (start, end, replacement) edits to one line, right-to-left."""
+    for s, e, repl in sorted(edits, key=lambda x: x[0], reverse=True):
+        raw = raw[:s] + repl + raw[e:]
+    return raw
+
+
+def _per_line_fix(
+    src: Source, edits_for: Callable[[int, str], list[tuple[int, int, str]]]
+) -> str:
+    out: list[str] = []
+    for i, line in enumerate(src.masked_lines, 1):
+        out.append(_apply_line_edits(src.lines[i - 1], edits_for(i, line)))
+    return "\n".join(out)
+
+
+def fix_E002_literal_quote(src: Source) -> str:
+    """Convert " to `` (opener) or '' (closer) using a context heuristic."""
+
+    def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
+        out = []
+        for m in re.finditer(r'"', line):
+            pos = m.start()
+            prev = line[pos - 1] if pos > 0 else " "
+            repl = "''" if prev.isalnum() or prev in ".,;:!?)]}" else "``"
+            out.append((pos, pos + 1, repl))
+        return out
+
+    return _per_line_fix(src, edits)
+
+
+def fix_E003_bare_operator(src: Source) -> str:
+    def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
+        out = []
+        for s, e in find_inline_math(line):
+            for m in _OP_RE.finditer(line, s, e):
+                out.append((m.start(), m.end(), "\\" + m.group(1)))
+        return out
+
+    return _per_line_fix(src, edits)
+
+
+def fix_E004_old_dots(src: Source) -> str:
+    def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
+        return [
+            (m.start(), m.end(), r"\dots")
+            for m in re.finditer(r"\\(?:ldots|cdots)\b", line)
+        ]
+
+    return _per_line_fix(src, edits)
+
+
+def fix_E005_math_punct(src: Source) -> str:
+    """Move a trailing `.` or `,` from inside inline math to just after it."""
+
+    def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
+        out = []
+        for s, e in find_inline_math(line):
+            if e - s >= 3 and line[e - 2] in ",.":
+                out.append((e - 2, e, "$" + line[e - 2]))
+        return out
+
+    return _per_line_fix(src, edits)
+
+
+def fix_E006_space_before_punct(src: Source) -> str:
+    def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
+        return [(m.start(1), m.end(1), "") for m in re.finditer(r"\S( +)[.,;!?]", line)]
+
+    return _per_line_fix(src, edits)
+
+
+def fix_E009_bad_math_ops(src: Source) -> str:
+    def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
+        out = []
+        for s, e in find_inline_math(line):
+            for m in re.finditer(r"\|\|", line[s:e]):
+                pos = s + m.start()
+                after = line[pos + 2] if pos + 2 < len(line) else ""
+                repl = r"\parallel" + (" " if after.isalpha() else "")
+                out.append((pos, pos + 2, repl))
+        return out
+
+    return _per_line_fix(src, edits)
+
+
+def fix_E010_double_dollar(src: Source) -> str:
+    """Replace alternating `$$` with `\\[` and `\\]`."""
+    parts: list[str] = []
+    last = 0
+    opening = True
+    for m in re.finditer(r"\$\$", src.masked):
+        parts.append(src.text[last : m.start()])
+        parts.append(r"\[" if opening else r"\]")
+        opening = not opening
+        last = m.end()
+    parts.append(src.text[last:])
+    return "".join(parts)
+
+
+def fix_E017_colon(src: Source) -> str:
+    def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
+        out = []
+        for s, e in find_inline_math(line):
+            for m in _COLON_RE.finditer(line, s + 1, e - 1):
+                colon = line.index(":", m.start(), m.end())
+                out.append((colon, colon + 1, r"\colon"))
+        return out
+
+    return _per_line_fix(src, edits)
+
+
 def fix_E013_indentation(src: Source) -> str:
     """Pad under-indented lines inside INDENT_ENVS to ``2 * depth`` spaces.
 
@@ -421,7 +533,15 @@ def fix_E013_indentation(src: Source) -> str:
 
 
 FIXERS: dict[str, Callable[[Source], str]] = {
+    "E002": fix_E002_literal_quote,
+    "E003": fix_E003_bare_operator,
+    "E004": fix_E004_old_dots,
+    "E005": fix_E005_math_punct,
+    "E006": fix_E006_space_before_punct,
+    "E009": fix_E009_bad_math_ops,
+    "E010": fix_E010_double_dollar,
     "E013": fix_E013_indentation,
+    "E017": fix_E017_colon,
 }
 
 

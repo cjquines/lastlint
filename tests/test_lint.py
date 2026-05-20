@@ -135,3 +135,33 @@ def test_fix_E013_skips_verbatim():
 def test_fix_is_idempotent_on_clean_fixture():
     text = (FIXTURES / "clean.tex").read_text()
     assert fix_text(text) == text
+
+
+@pytest.mark.parametrize(
+    "before,after,rule",
+    [
+        ('Say "hi" loud', "Say ``hi'' loud", "E002"),
+        ("$sin(x) + cos(y)$", r"$\sin(x) + \cos(y)$", "E003"),
+        (r"$x \ldots y \cdots z$", r"$x \dots y \dots z$", "E004"),
+        (r"We have $x = 3.$ done", r"We have $x = 3$. done", "E005"),
+        ("foo , bar ; baz", "foo, bar; baz", "E006"),
+        ("$a||b$", r"$a\parallel b$", "E009"),
+        ("$$x = 1$$", r"\[x = 1\]", "E010"),
+        (r"$f : \mathbb{R}$", r"$f \colon \mathbb{R}$", "E017"),
+    ],
+)
+def test_fix_resolves_rule(before: str, after: str, rule: str):
+    fixed = fix_text(before)
+    assert fixed == after
+    assert rule not in rules(fixed)
+    assert fix_text(fixed) == fixed
+
+
+def test_fix_E002_skips_verbatim():
+    text = '\\begin{verbatim}\nprint("hi")\n\\end{verbatim}\n'
+    assert fix_text(text) == text
+
+
+def test_fix_E010_alternates_pairs():
+    text = "$$a$$ and $$b$$"
+    assert fix_text(text) == r"\[a\] and \[b\]"
