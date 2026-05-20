@@ -1,0 +1,6 @@
+- id: evan-latex-lint
+  name: Evan's LaTeX style guide
+  description: Lints .tex files against Evan Chen's LaTeX style guide.
+  entry: evan-latex-lint
+  language: python
+  types: [tex]

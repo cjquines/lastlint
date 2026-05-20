@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "evan-latex-lint"
+version = "0.1.0"
+description = "Linter for Evan Chen's LaTeX style guide"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "CJ Quines" }]
+
+[project.scripts]
+evan-latex-lint = "evan_latex_lint:main"
+
+[tool.hatch.build.targets.wheel]
+include = ["evan_latex_lint.py"]
+
+[tool.hatch.build.targets.sdist]
+include = ["evan_latex_lint.py", "README.md", "tests/"]
