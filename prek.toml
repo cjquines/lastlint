@@ -59,5 +59,14 @@ hooks = [{ id = "prettier", types_or = ["json", "yaml", "markdown"] }]
 # Self-lint: run evan-latex-lint on .tex files in the repo (none yet, but
 # guards against accidentally committing broken .tex outside tests/fixtures/).
 [[repos]]
-repo = "."
-hooks = [{ id = "evan-latex-lint", exclude = '^tests/fixtures/' }]
+repo = "local"
+hooks = [
+  {
+    id = "evan-latex-lint",
+    name = "Evan's LaTeX style guide",
+    entry = "evan-latex-lint",
+    language = "python",
+    types = ["tex"],
+    exclude = '^tests/fixtures/',
+  },
+]

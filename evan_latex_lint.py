@@ -10,7 +10,7 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterable, Iterator
+from typing import Callable, Iterator
 
 MAX_LINE_LENGTH = 100
 
@@ -63,9 +63,7 @@ class Source:
         return rule in self.suppressions.get(line, ())
 
 
-_VERBATIM_BEGIN_RE = re.compile(
-    rf"\\begin\{{({'|'.join(VERBATIM_ENVS)})\*?\}}"
-)
+_VERBATIM_BEGIN_RE = re.compile(rf"\\begin\{{({'|'.join(VERBATIM_ENVS)})\*?\}}")
 
 
 def scan_verbatim(lines: list[str]) -> tuple[list[str], set[int]]:
@@ -161,7 +159,9 @@ def rule_E001_line_length(src: Source) -> Iterator[Finding]:
             continue
         if len(line) > MAX_LINE_LENGTH:
             yield Finding(
-                "E001", i, MAX_LINE_LENGTH + 1,
+                "E001",
+                i,
+                MAX_LINE_LENGTH + 1,
                 f"line is {len(line)} characters; max {MAX_LINE_LENGTH}",
             )
 
@@ -169,13 +169,12 @@ def rule_E001_line_length(src: Source) -> Iterator[Finding]:
 def rule_E002_literal_quote(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.masked_lines, 1):
         for m in re.finditer(r'"', line):
-            yield Finding("E002", i, m.start() + 1,
-                          "literal \" is forbidden; use `` or ''")
+            yield Finding(
+                "E002", i, m.start() + 1, "literal \" is forbidden; use `` or ''"
+            )
 
 
-_OP_RE = re.compile(
-    r"(?<![A-Za-z\\])(" + "|".join(OPERATORS) + r")(?![A-Za-z])"
-)
+_OP_RE = re.compile(r"(?<![A-Za-z\\])(" + "|".join(OPERATORS) + r")(?![A-Za-z])")
 
 
 def rule_E003_bare_operator(src: Source) -> Iterator[Finding]:
@@ -183,7 +182,9 @@ def rule_E003_bare_operator(src: Source) -> Iterator[Finding]:
         for s, e in find_inline_math(line):
             for m in _OP_RE.finditer(line, s, e):
                 yield Finding(
-                    "E003", i, m.start() + 1,
+                    "E003",
+                    i,
+                    m.start() + 1,
                     f"bare operator {m.group(1)!r}; use \\{m.group(1)}",
                 )
 
@@ -191,8 +192,9 @@ def rule_E003_bare_operator(src: Source) -> Iterator[Finding]:
 def rule_E004_old_dots(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.masked_lines, 1):
         for m in re.finditer(r"\\(ldots|cdots)\b", line):
-            yield Finding("E004", i, m.start() + 1,
-                          rf"\{m.group(1)} is forbidden; use \dots")
+            yield Finding(
+                "E004", i, m.start() + 1, rf"\{m.group(1)} is forbidden; use \dots"
+            )
 
 
 def rule_E005_math_punct(src: Source) -> Iterator[Finding]:
@@ -204,8 +206,10 @@ def rule_E005_math_punct(src: Source) -> Iterator[Finding]:
         for s, e in find_inline_math(line):
             if e - s >= 3 and line[e - 2] in ",.":
                 yield Finding(
-                    "E005", i, e - 1,
-                    f"grammatical {line[e-2]!r} inside math; move outside $",
+                    "E005",
+                    i,
+                    e - 1,
+                    f"grammatical {line[e - 2]!r} inside math; move outside $",
                 )
 
 
@@ -214,8 +218,9 @@ def rule_E006_space_before_punct(src: Source) -> Iterator[Finding]:
     # (barycentric coordinates `(a : b : c)`, etc.).
     for i, line in enumerate(src.masked_lines, 1):
         for m in re.finditer(r"\S +([.,;!?])", line):
-            yield Finding("E006", i, m.start(1) + 1,
-                          f"extra space before {m.group(1)!r}")
+            yield Finding(
+                "E006", i, m.start(1) + 1, f"extra space before {m.group(1)!r}"
+            )
 
 
 def rule_E007_asymmetric_spacing(src: Source) -> Iterator[Finding]:
@@ -224,30 +229,30 @@ def rule_E007_asymmetric_spacing(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.masked_lines, 1):
         for s, e in find_inline_math(line):
             for m in pat.finditer(line, s + 1, e - 1):
-                yield Finding("E007", i, m.start() + 1,
-                              "asymmetric spacing around '='")
+                yield Finding("E007", i, m.start() + 1, "asymmetric spacing around '='")
 
 
 def rule_E009_bad_math_ops(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.masked_lines, 1):
         for s, e in find_inline_math(line):
             for m in re.finditer(r"\|\|", line[s:e]):
-                yield Finding("E009", i, s + m.start() + 1,
-                              "|| in math; use \\parallel")
+                yield Finding(
+                    "E009", i, s + m.start() + 1, "|| in math; use \\parallel"
+                )
 
 
 def rule_E010_double_dollar(src: Source) -> Iterator[Finding]:
     for m in re.finditer(r"\$\$", src.masked):
         line, col = offset_to_line_col(src.masked, m.start())
-        yield Finding("E010", line, col,
-                      r"$$ is forbidden; use \[ ... \]")
+        yield Finding("E010", line, col, r"$$ is forbidden; use \[ ... \]")
 
 
 def rule_E011_adjacent_display(src: Source) -> Iterator[Finding]:
     for m in re.finditer(r"\\\]\s*\\\[", src.masked):
         line, col = offset_to_line_col(src.masked, m.start())
-        yield Finding("E011", line, col,
-                      "adjacent \\[ ... \\] blocks should be one align*")
+        yield Finding(
+            "E011", line, col, "adjacent \\[ ... \\] blocks should be one align*"
+        )
 
 
 def rule_E012_align_line(src: Source) -> Iterator[Finding]:
@@ -255,14 +260,16 @@ def rule_E012_align_line(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.masked_lines, 1):
         for m in pat.finditer(line):
             before = line[: m.start()]
-            after = line[m.end():]
+            after = line[m.end() :]
             # strip a trailing comment
             cmt = re.search(r"(?<!\\)%", after)
             if cmt:
                 after = after[: cmt.start()]
             if before.strip() or after.strip():
                 yield Finding(
-                    "E012", i, m.start() + 1,
+                    "E012",
+                    i,
+                    m.start() + 1,
                     rf"\{m.group(1)}{{align*}} must be on its own line",
                 )
 
@@ -274,7 +281,9 @@ def rule_E015_double_backslash_break(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.masked_lines, 1):
         for m in re.finditer(r"\\\\\\\\", line):
             yield Finding(
-                "E015", i, m.start() + 1,
+                "E015",
+                i,
+                m.start() + 1,
                 r"\\\\ paragraph break is forbidden; use a blank line",
             )
 
@@ -282,22 +291,41 @@ def rule_E015_double_backslash_break(src: Source) -> Iterator[Finding]:
 # Envs whose body lines should be indented at least 2 spaces per nesting level.
 # Conservative allowlist: only envs where Evan's example clearly indents.
 # Other envs (document, center, asy, ...) are excluded.
-INDENT_ENVS = frozenset({
-    "align", "align*",
-    "gather", "gather*",
-    "equation", "equation*",
-    "cases", "dcases",
-    "matrix", "pmatrix", "bmatrix", "vmatrix", "Vmatrix", "smallmatrix",
-    "itemize", "enumerate",
-    "remark", "remark*",
-    "proof",
-    "theorem", "theorem*",
-    "lemma", "lemma*",
-    "corollary", "corollary*",
-    "definition", "definition*",
-    "example", "example*",
-    "proposition", "proposition*",
-})
+INDENT_ENVS = frozenset(
+    {
+        "align",
+        "align*",
+        "gather",
+        "gather*",
+        "equation",
+        "equation*",
+        "cases",
+        "dcases",
+        "matrix",
+        "pmatrix",
+        "bmatrix",
+        "vmatrix",
+        "Vmatrix",
+        "smallmatrix",
+        "itemize",
+        "enumerate",
+        "remark",
+        "remark*",
+        "proof",
+        "theorem",
+        "theorem*",
+        "lemma",
+        "lemma*",
+        "corollary",
+        "corollary*",
+        "definition",
+        "definition*",
+        "example",
+        "example*",
+        "proposition",
+        "proposition*",
+    }
+)
 
 _BEGIN_END_RE = re.compile(r"\\(begin|end)\{([^}]+)\}")
 
@@ -313,7 +341,8 @@ def rule_E013_indentation(src: Source) -> Iterator[Finding]:
         first_token = _BEGIN_END_RE.search(line)
         line_starts_with_end = bool(
             re.match(r"\s*\\end\{", line)
-            and first_token and first_token.group(1) == "end"
+            and first_token
+            and first_token.group(1) == "end"
         )
 
         # Effective depth for the indentation check on this line.
@@ -324,7 +353,9 @@ def rule_E013_indentation(src: Source) -> Iterator[Finding]:
             expected = 2 * effective_depth
             if indent < expected:
                 yield Finding(
-                    "E013", i, 1,
+                    "E013",
+                    i,
+                    1,
                     f"line should be indented at least {expected} spaces "
                     f"(env depth {effective_depth})",
                 )
@@ -346,8 +377,12 @@ def rule_E017_colon(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.masked_lines, 1):
         for s, e in find_inline_math(line):
             for m in _COLON_RE.finditer(line, s + 1, e - 1):
-                yield Finding("E017", i, m.start() + 1,
-                              "use \\colon for function signatures, not ':'")
+                yield Finding(
+                    "E017",
+                    i,
+                    m.start() + 1,
+                    "use \\colon for function signatures, not ':'",
+                )
 
 
 RULES: list[Callable[[Source], Iterator[Finding]]] = [

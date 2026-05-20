@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from evan_latex_lint import Source, find_inline_math, lint_text, mask_verbatim
+from evan_latex_lint import find_inline_math, lint_text, mask_verbatim
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -14,8 +14,20 @@ def rules(text: str) -> set[str]:
 def test_violations_fixture_covers_all_rules():
     text = (FIXTURES / "violations.tex").read_text()
     expected = {
-        "E001", "E002", "E003", "E004", "E005", "E006", "E007",
-        "E009", "E010", "E011", "E012", "E013", "E015", "E017",
+        "E001",
+        "E002",
+        "E003",
+        "E004",
+        "E005",
+        "E006",
+        "E007",
+        "E009",
+        "E010",
+        "E011",
+        "E012",
+        "E013",
+        "E015",
+        "E017",
     }
     got = rules(text)
     missing = expected - got
@@ -39,7 +51,7 @@ def test_inline_math_spans():
 
 
 def test_verbatim_envs_are_masked():
-    text = "before\n\\begin{asy}\nlabel(\"$X$\");\n\\end{asy}\nafter"
+    text = 'before\n\\begin{asy}\nlabel("$X$");\n\\end{asy}\nafter'
     masked = mask_verbatim(text)
     assert "label" not in masked
     assert "before" in masked and "after" in masked

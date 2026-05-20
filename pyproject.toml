@@ -13,6 +13,9 @@ authors = [{ name = "CJ Quines" }]
 [project.scripts]
 evan-latex-lint = "evan_latex_lint:main"
 
+[dependency-groups]
+dev = ["prek", "pytest"]
+
 [tool.hatch.build.targets.wheel]
 include = ["evan_latex_lint.py"]
 
