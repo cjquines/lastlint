@@ -6,6 +6,8 @@ https://web.evanchen.cc/latex-style-guide.html
 from __future__ import annotations
 
 import argparse
+import glob
+import os
 import re
 import sys
 from dataclasses import dataclass
@@ -817,12 +819,87 @@ def parse_ignore(value: str) -> frozenset[str]:
     return frozenset(codes)
 
 
+# ANSI styling. Used only on an interactive terminal so that piped/redirected
+# output stays the plain `file:line:col: EXXX: message` grep/editor format.
+_ANSI = {
+    "reset": "\033[0m",
+    "bold": "\033[1m",
+    "dim": "\033[2m",
+    "red": "\033[31m",
+    "green": "\033[32m",
+    "yellow": "\033[33m",
+    "cyan": "\033[36m",
+}
+
+
+def _want_color(stream) -> bool:
+    """Decide whether to emit ANSI codes, honoring NO_COLOR / FORCE_COLOR."""
+    if os.environ.get("NO_COLOR"):
+        return False
+    if os.environ.get("FORCE_COLOR"):
+        return True
+    return hasattr(stream, "isatty") and stream.isatty()
+
+
+def _paint(text: str, *styles: str, enabled: bool) -> str:
+    if not enabled or not styles:
+        return text
+    return "".join(_ANSI[s] for s in styles) + text + _ANSI["reset"]
+
+
+def _report_pretty(path: Path, findings: list[Finding]) -> None:
+    """TTY layout: a file header, then aligned `line:col rule message` rows."""
+    print(_paint(str(path), "bold", "cyan", enabled=True))
+    width = max(len(f"{f.line}:{f.col}") for f in findings)
+    for f in findings:
+        loc = f"{f.line}:{f.col}".rjust(width)
+        print(
+            f"  {_paint(loc, 'dim', enabled=True)}  "
+            f"{_paint(f.rule, 'yellow', enabled=True)}  {f.msg}"
+        )
+
+
+def expand_files(patterns: list[str]) -> tuple[list[Path], list[str]]:
+    """Resolve CLI file arguments, expanding any glob patterns.
+
+    The shell normally expands globs itself, but not when a pattern is quoted
+    or unmatched (and never on Windows). An argument with no glob metacharacter
+    is kept verbatim so a real file named `a[1].tex` still works; a glob that
+    matches nothing is reported as unresolved. Results are de-duplicated and
+    sorted, matches per pattern.
+    """
+    paths: list[Path] = []
+    seen: set[Path] = set()
+    unmatched: list[str] = []
+    for pat in patterns:
+        if glob.has_magic(pat):
+            matches = sorted(glob.glob(pat, recursive=True))
+            if not matches:
+                unmatched.append(pat)
+            for m in matches:
+                p = Path(m)
+                if p not in seen:
+                    seen.add(p)
+                    paths.append(p)
+        else:
+            p = Path(pat)
+            if p not in seen:
+                seen.add(p)
+                paths.append(p)
+    return paths, unmatched
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
         prog="otis-latex-lint",
         description="Lint .tex files against Evan Chen's LaTeX style guide.",
     )
-    ap.add_argument("files", nargs="+", type=Path)
+    ap.add_argument(
+        "files",
+        nargs="+",
+        help="one or more .tex files; glob patterns (e.g. 'src/**/*.tex') "
+        "are expanded, useful when quoted or on Windows",
+    )
     ap.add_argument(
         "--fix",
         action="store_true",
@@ -836,19 +913,93 @@ def main(argv: list[str] | None = None) -> int:
         metavar="E0XX,E0YY",
         help="comma-separated rule codes to skip (both reporting and fixing)",
     )
+    ap.add_argument(
+        "--color",
+        choices=("auto", "always", "never"),
+        default="auto",
+        help="when to colorize output (default: auto — only on a terminal)",
+    )
     args = ap.parse_args(argv)
 
-    bad = 0
-    for path in args.files:
-        if args.fix:
+    if args.color == "always":
+        color = True
+    elif args.color == "never":
+        color = False
+    else:
+        color = _want_color(sys.stdout)
+
+    total = 0
+    files_with_findings = 0
+    fixed_files = 0
+    errors = 0
+
+    files, unmatched = expand_files(args.files)
+    for pat in unmatched:
+        print(
+            _paint("error:", "red", "bold", enabled=color) + f" no files match: {pat}",
+            file=sys.stderr,
+        )
+        errors += 1
+
+    for path in files:
+        try:
             original = read_text(path)
-            fixed = fix_text(original, args.ignore)
-            if fixed != original:
-                path.write_text(fixed, encoding="utf-8")
-        for f in lint_file(path, args.ignore):
-            print(f.format(str(path)))
-            bad += 1
-    return 1 if bad else 0
+        except FileNotFoundError:
+            print(
+                _paint("error:", "red", "bold", enabled=color)
+                + f" no such file: {path}",
+                file=sys.stderr,
+            )
+            errors += 1
+            continue
+        except OSError as e:
+            print(
+                _paint("error:", "red", "bold", enabled=color)
+                + f" cannot read {path}: {e}",
+                file=sys.stderr,
+            )
+            errors += 1
+            continue
+
+        text = original
+        if args.fix:
+            text = fix_text(original, args.ignore)
+            if text != original:
+                path.write_text(text, encoding="utf-8")
+                fixed_files += 1
+                if color:
+                    print(_paint("fixed", "green", enabled=color) + f" {path}")
+
+        findings = lint_text(text, args.ignore)
+        if not findings:
+            continue
+        files_with_findings += 1
+        total += len(findings)
+        if color:
+            _report_pretty(path, findings)
+        else:
+            for f in findings:
+                print(f.format(str(path)))
+
+    if color:
+        if total:
+            noun = "problem" if total == 1 else "problems"
+            fnoun = "file" if files_with_findings == 1 else "files"
+            print(
+                _paint(
+                    f"✖ {total} {noun} in {files_with_findings} {fnoun}",
+                    "red",
+                    "bold",
+                    enabled=color,
+                )
+            )
+        elif errors == 0:
+            print(_paint("✓ no problems found", "green", enabled=color))
+        if fixed_files:
+            fnoun = "file" if fixed_files == 1 else "files"
+            print(_paint(f"  {fixed_files} {fnoun} auto-fixed", "dim", enabled=color))
+
+    return 1 if (total or errors) else 0
 
 
 if __name__ == "__main__":

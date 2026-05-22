@@ -22,10 +22,16 @@ use the `otis-latex-lint` hook id.
 
 ```sh
 pip install .
-otis-latex-lint path/to/file.tex
+otis-latex-lint path/to/file.tex another.tex
 ```
 
-Output format is `file:line:col: EXXX: message`, parseable by editors.
+Multiple files are accepted, and glob patterns are expanded — handy when the
+pattern is quoted (`otis-latex-lint 'src/**/*.tex'`) or on Windows, where the
+shell does not glob. On a terminal, output is grouped per file and
+colorized with a summary line; when piped or redirected it falls back to the
+plain `file:line:col: EXXX: message` format parseable by editors. Force either
+mode with `--color always` / `--color never` (also honors `NO_COLOR` and
+`FORCE_COLOR`).
 
 Pass `--ignore E001,E013` to skip rules entirely — both reporting and (with
 `--fix`) fixing. Useful for projects that don't follow a particular rule.
