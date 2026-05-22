@@ -571,8 +571,12 @@ def fix_E013_indentation(src: Source) -> str:
         if effective_depth > 0 and raw.strip() and i not in src.verbatim_lines:
             indent = len(raw) - len(raw.lstrip(" "))
             expected = 2 * effective_depth
-            if indent < expected:
-                raw = " " * expected + raw.lstrip(" ")
+            stripped = raw.lstrip(" ")
+            # Don't pad a line past the E001 length limit: that would just
+            # trade an E013 for an E001. Leave it for the author to rewrap;
+            # E013 still reports it.
+            if indent < expected and expected + len(stripped) <= MAX_LINE_LENGTH:
+                raw = " " * expected + stripped
 
         out.append(raw)
 

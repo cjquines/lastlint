@@ -132,6 +132,14 @@ def test_fix_E013_handles_nesting():
     assert "E013" not in rules(fixed)
 
 
+def test_fix_E013_skips_overflow():
+    # A line that would exceed the 100-char limit once padded is left alone.
+    body = "\\ii " + "x" * 97  # 101 chars; +2 indent would make 103
+    text = f"\\begin{{itemize}}\n{body}\n\\end{{itemize}}\n"
+    fixed = fix_text(text)
+    assert f"\n{body}\n" in fixed  # untouched, no leading spaces added
+
+
 def test_fix_E013_skips_verbatim():
     text = "\\begin{itemize}\n\\begin{verbatim}\nfoo\n\\end{verbatim}\n\\end{itemize}\n"
     fixed = fix_text(text)
