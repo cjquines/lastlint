@@ -4,3 +4,10 @@
   entry: otis-latex-lint
   language: python
   types: [tex]
+
+- id: otis-latex-lint-fix
+  name: Evan's LaTeX style guide (autofix)
+  description: Auto-fixes supported rules, then reports anything left.
+  entry: otis-latex-lint --fix
+  language: python
+  types: [tex]

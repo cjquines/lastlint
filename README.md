@@ -15,6 +15,10 @@ repos:
       - id: otis-latex-lint
 ```
 
+To auto-fix supported rules instead of only reporting, use the
+`otis-latex-lint-fix` hook id (it modifies files in place, then reports
+anything left).
+
 ## Standalone
 
 ```sh
