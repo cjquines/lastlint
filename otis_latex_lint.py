@@ -203,7 +203,7 @@ def rule_E004_old_dots(src: Source) -> Iterator[Finding]:
 
 def rule_E005_math_punct(src: Source) -> Iterator[Finding]:
     # Grammatical punctuation immediately before the closing $ of inline math.
-    # This is the common Evan-banned pattern: $x=3.$, $a,b,$.
+    # This is the common banned pattern: $x=3.$, $a,b,$.
     # Note: middle commas like $f(a,b)$ are mathematical, not grammatical,
     # and end with `)`, so they are not flagged.
     for i, line in enumerate(src.masked_lines, 1):
@@ -325,8 +325,7 @@ def rule_E015_double_backslash_break(src: Source) -> Iterator[Finding]:
 
 
 # Envs whose body lines should be indented at least 2 spaces per nesting level.
-# Conservative allowlist: only envs where Evan's example clearly indents.
-# Other envs (document, center, asy, ...) are excluded.
+# Conservative allowlist; other envs (document, center, asy, ...) are excluded.
 INDENT_ENVS = frozenset(
     {
         "align",
