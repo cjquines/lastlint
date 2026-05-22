@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.2.0](https://github.com/cjquines/otis-latex-linter/compare/v0.1.0...v0.2.0) (2026-05-22)
+
+
+### Features
+
+* add --ignore flag to skip rules globally ([8ef61db](https://github.com/cjquines/otis-latex-linter/commit/8ef61db22dd4098eba834fa60294be7007c18265))
+* add otis-latex-lint-fix pre-commit hook ([070c3fc](https://github.com/cjquines/otis-latex-linter/commit/070c3fc3713e6b9f80ecb4bdf84e9d29148bf6eb))
+* ignore comments and post-\end{document} content ([44ee8c5](https://github.com/cjquines/otis-latex-linter/commit/44ee8c5cadc589413dc6d6d70c90bd89030142de))
+* switch E013 to a denylist of non-indenting envs ([efed5d8](https://github.com/cjquines/otis-latex-linter/commit/efed5d88ad1423229aba0ae1d8d67e7f284d5d94))
+
+
+### Bug Fixes
+
+* **E002:** ignore `\"` umlaut accent, not a literal quote ([874c2fb](https://github.com/cjquines/otis-latex-linter/commit/874c2fb2801f2be67b81f34b4a996b1b7189c96e))
+* **E013:** don't pad lines past the E001 length limit ([0d42e34](https://github.com/cjquines/otis-latex-linter/commit/0d42e3471ab756a5a14a6b05d47f1c3670ba4665))
+* **E013:** drop theorem-like envs from the indent allowlist ([8bdd117](https://github.com/cjquines/otis-latex-linter/commit/8bdd117c73cde5cd9391dec9153f51f29fe5a275))
+* exempt control words from E006 space-before-punct ([228629e](https://github.com/cjquines/otis-latex-linter/commit/228629eb3627583378dbe962d58a63f78eaa5db7))
+* only flag E017 colon when math span has a mapping arrow ([06e6a5d](https://github.com/cjquines/otis-latex-linter/commit/06e6a5d60c9f4a03749d28604b1902a172d1b14f))
+* pick \dots variant from context in E004 fixer ([669c152](https://github.com/cjquines/otis-latex-linter/commit/669c152b2a9ea2efd4b937b8d754aff9162cf15f))
+* run --fix to a fixpoint instead of a single pass ([c9ec94d](https://github.com/cjquines/otis-latex-linter/commit/c9ec94d4c747eef1b2598d2b2a2970920a5d1c05))
+
+
+### Documentation
+
+* add CLAUDE.md ([ce6de1f](https://github.com/cjquines/otis-latex-linter/commit/ce6de1f3744774e26deb288e5d90c1f600dbaf0a))
+* **readme:** recommend fixer by default ([89c17f1](https://github.com/cjquines/otis-latex-linter/commit/89c17f1460fcc7dfb8f41bbf5c4494749ef8ba74))
+
 ## 0.1.0 (2026-05-22)
 
 
