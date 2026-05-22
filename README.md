@@ -32,23 +32,23 @@ trailing whitespace.
 
 ## Rules
 
-| ID   | Rule from style guide                         |
-| ---- | --------------------------------------------- |
-| E001 | Line length ≤ 100                             |
-| E002 | No literal `"`                                |
-| E003 | Operators (`\sin` etc.) must be commands      |
-| E004 | No `\ldots` or `\cdots`; use `\dots`          |
-| E005 | No grammatical punctuation inside inline math |
-| E006 | No extraneous space before punctuation        |
-| E007 | Symmetric spacing around `=`                  |
-| E009 | No `\|\|` for `\parallel`                     |
-| E010 | No `$$ ... $$`                                |
-| E011 | No adjacent `\[ ... \]` blocks                |
-| E012 | `\begin{align*}` / `\end{align*}` on own line |
-| E013 | Env contents indented at least 2 spaces       |
-| E014 | No trailing whitespace                        |
-| E015 | No `\\\\` paragraph break                     |
-| E017 | `\colon` for function signatures              |
+| ID   | Rule from style guide                                     |
+| ---- | --------------------------------------------------------- |
+| E001 | Line length ≤ 100                                         |
+| E002 | No literal `"`                                            |
+| E003 | Operators (`\sin` etc.) must be commands                  |
+| E004 | No `\ldots`, `\cdots`, or literal `...`; use `\dots`      |
+| E005 | No grammatical punctuation inside inline math             |
+| E006 | No extraneous space before punctuation                    |
+| E007 | Symmetric spacing around `=`                              |
+| E009 | Bad math operators (`\|\|`, spaced `\|`, `*`, `x`, `mod`) |
+| E010 | No `$$ ... $$`                                            |
+| E011 | No adjacent `\[ ... \]` blocks                            |
+| E012 | `\begin{align*}` / `\end{align*}` on own line             |
+| E013 | Env contents indented at least 2 spaces                   |
+| E014 | No trailing whitespace                                    |
+| E015 | No `\\\\` paragraph break                                 |
+| E017 | `\colon` for function signatures                          |
 
 E013 applies to a conservative allowlist of envs (`align`, `itemize`,
 `enumerate`, `proof`, `theorem`, matrices, etc.); other envs are not

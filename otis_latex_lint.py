@@ -195,6 +195,10 @@ def rule_E004_old_dots(src: Source) -> Iterator[Finding]:
             yield Finding(
                 "E004", i, m.start() + 1, rf"\{m.group(1)} is forbidden; use \dots"
             )
+        for m in re.finditer(r"\.{3,}", line):
+            yield Finding(
+                "E004", i, m.start() + 1, "literal '...' is forbidden; use \\dots"
+            )
 
 
 def rule_E005_math_punct(src: Source) -> Iterator[Finding]:
@@ -232,12 +236,35 @@ def rule_E007_asymmetric_spacing(src: Source) -> Iterator[Finding]:
                 yield Finding("E007", i, m.start() + 1, "asymmetric spacing around '='")
 
 
+# Bad math operators, all reported under E009.
+_PARALLEL_RE = re.compile(r"\|\|")
+_MID_RE = re.compile(r" \| ")  # a spaced single bar is a relation, not |x|
+_STAR_RE = re.compile(r"(?<![\^_{\\])\*")  # bare *, not a superscript star ^*
+_TIMES_X_RE = re.compile(r"\d\s*x\s*\d")  # 2x4 / 2 x 4: x is multiplication
+_MOD_RE = re.compile(r"(?<![A-Za-z\\])mod(?![A-Za-z])")  # not \bmod / \pmod
+
+
 def rule_E009_bad_math_ops(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.masked_lines, 1):
         for s, e in find_inline_math(line):
-            for m in re.finditer(r"\|\|", line[s:e]):
+            for m in _PARALLEL_RE.finditer(line, s, e):
+                yield Finding("E009", i, m.start() + 1, "|| in math; use \\parallel")
+            for m in _MID_RE.finditer(line, s, e):
+                yield Finding("E009", i, m.start() + 2, "| in math; use \\mid")
+            for m in _STAR_RE.finditer(line, s, e):
                 yield Finding(
-                    "E009", i, s + m.start() + 1, "|| in math; use \\parallel"
+                    "E009", i, m.start() + 1, "* in math; use \\cdot or \\times"
+                )
+            for m in _TIMES_X_RE.finditer(line, s, e):
+                yield Finding(
+                    "E009",
+                    i,
+                    m.start() + 1,
+                    "literal 'x' between numbers; use \\times",
+                )
+            for m in _MOD_RE.finditer(line, s, e):
+                yield Finding(
+                    "E009", i, m.start() + 1, "literal 'mod'; use \\bmod or \\pmod"
                 )
 
 
@@ -438,10 +465,16 @@ def fix_E003_bare_operator(src: Source) -> str:
 
 def fix_E004_old_dots(src: Source) -> str:
     def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
-        return [
-            (m.start(), m.end(), r"\dots")
-            for m in re.finditer(r"\\(?:ldots|cdots)\b", line)
-        ]
+        out = []
+        for m in re.finditer(r"\\(?:ldots|cdots)\b|\.{3,}", line):
+            repl = r"\dots"
+            # `2...x` -> `2\dots x`: a control word needs a space before an
+            # alphanumeric, or it would be read as part of the command name.
+            if m.group().startswith(".") and m.end() < len(line):
+                if line[m.end()].isalnum():
+                    repl += " "
+            out.append((m.start(), m.end(), repl))
+        return out
 
     return _per_line_fix(src, edits)
 
@@ -467,14 +500,22 @@ def fix_E006_space_before_punct(src: Source) -> str:
 
 
 def fix_E009_bad_math_ops(src: Source) -> str:
+    """Fix the unambiguous E009 cases: || -> \\parallel and ` | ` -> ` \\mid `.
+
+    ``*``, ``x``-as-times, and bare ``mod`` are left for the author: the
+    correct replacement (\\cdot vs \\times, \\bmod vs \\pmod) is ambiguous.
+    """
+
     def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
         out = []
         for s, e in find_inline_math(line):
-            for m in re.finditer(r"\|\|", line[s:e]):
-                pos = s + m.start()
+            for m in _PARALLEL_RE.finditer(line, s, e):
+                pos = m.start()
                 after = line[pos + 2] if pos + 2 < len(line) else ""
                 repl = r"\parallel" + (" " if after.isalpha() else "")
                 out.append((pos, pos + 2, repl))
+            for m in _MID_RE.finditer(line, s, e):
+                out.append((m.start(), m.end(), r" \mid "))
         return out
 
     return _per_line_fix(src, edits)
