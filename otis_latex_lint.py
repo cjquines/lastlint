@@ -261,13 +261,28 @@ def rule_E005_math_punct(src: Source) -> Iterator[Finding]:
                 )
 
 
+# ':' intentionally omitted: it has too many legitimate spaced uses
+# (barycentric coordinates `(a : b : c)`, etc.).
+_E006_RE = re.compile(r"(\S+)( +)([.,;!?])")
+
+
+def _e006_matches(line: str) -> Iterator[re.Match[str]]:
+    for m in _E006_RE.finditer(line):
+        tok = m.group(1)
+        # `\item ?`, `\item[label] ?`, etc.: the space terminating a control
+        # word (or its optional arg) is required syntax, not a stray space.
+        # But `\textbf{x} .` has a genuine stray space — the `}` already
+        # closed the argument — so only exempt tokens not ending in `}`.
+        is_command = tok.startswith("\\") and tok[1:2].isalpha()
+        if not is_command or tok.endswith("}"):
+            yield m
+
+
 def rule_E006_space_before_punct(src: Source) -> Iterator[Finding]:
-    # ':' intentionally omitted: it has too many legitimate spaced uses
-    # (barycentric coordinates `(a : b : c)`, etc.).
     for i, line in enumerate(src.masked_lines, 1):
-        for m in re.finditer(r"\S +([.,;!?])", line):
+        for m in _e006_matches(line):
             yield Finding(
-                "E006", i, m.start(1) + 1, f"extra space before {m.group(1)!r}"
+                "E006", i, m.start(3) + 1, f"extra space before {m.group(3)!r}"
             )
 
 
@@ -523,7 +538,7 @@ def fix_E005_math_punct(src: Source) -> str:
 
 def fix_E006_space_before_punct(src: Source) -> str:
     def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
-        return [(m.start(1), m.end(1), "") for m in re.finditer(r"\S( +)[.,;!?]", line)]
+        return [(m.start(2), m.end(2), "") for m in _e006_matches(line)]
 
     return _per_line_fix(src, edits)
 
