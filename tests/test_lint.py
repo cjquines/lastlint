@@ -175,6 +175,15 @@ def test_fix_resolves_rule(before: str, after: str, rule: str):
     assert fix_text(fixed) == fixed
 
 
+def test_fix_converges_in_one_call():
+    # E006 collapses the spaced ellipsis into `...`, which then needs E004.
+    # A single fix_text call must reach a fixpoint regardless of fixer order.
+    text = "work it out. . .\n"
+    fixed = fix_text(text)
+    assert fix_text(fixed) == fixed
+    assert not {f.rule for f in lint_text(fixed)} & {"E004", "E006"}
+
+
 def test_fix_E002_skips_verbatim():
     text = '\\begin{verbatim}\nprint("hi")\n\\end{verbatim}\n'
     assert fix_text(text) == text

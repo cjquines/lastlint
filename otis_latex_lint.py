@@ -635,13 +635,27 @@ def lint_text(text: str, ignore: frozenset[str] = frozenset()) -> list[Finding]:
     return findings
 
 
+# Fixers can feed each other: e.g. E006 collapsing `. . .` into `...` exposes
+# an E004. Run the whole pipeline until the file stops changing so a single
+# `--fix` invocation always lands on a fixpoint.
+MAX_FIX_PASSES = 8
+
+
 def fix_text(text: str, ignore: frozenset[str] = frozenset()) -> str:
-    """Apply every available fixer in turn. Idempotent on clean input."""
-    for rule, fixer in FIXERS.items():
-        if rule in ignore:
-            continue
-        src = Source(text)
-        text = fixer(src)
+    """Apply every available fixer, repeating to a fixpoint.
+
+    Idempotent on clean input. One fixer's output can be another's input, so
+    a single pass is not enough to converge; iterate until stable.
+    """
+    for _ in range(MAX_FIX_PASSES):
+        before = text
+        for rule, fixer in FIXERS.items():
+            if rule in ignore:
+                continue
+            src = Source(text)
+            text = fixer(src)
+        if text == before:
+            break
     return text
 
 
