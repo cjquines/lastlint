@@ -451,11 +451,18 @@ def rule_E013_indentation(src: Source) -> Iterator[Finding]:
 
 _FONT_CMD = r"\\(math[a-z]+|[A-Z]+)\b"
 _COLON_RE = re.compile(rf"[A-Za-z][ \t]*:[ \t]*{_FONT_CMD}")
+# Only treat `:` as a function-signature colon when the math span also has a
+# mapping arrow; a bare `:` is usually a ratio (`1 : 2`) and correct as-is.
+_ARROW_RE = re.compile(
+    r"\\(to|mapsto|rightarrow|longrightarrow|hookrightarrow)(?![a-zA-Z])"
+)
 
 
 def rule_E017_colon(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.masked_lines, 1):
         for s, e in find_inline_math(line):
+            if not _ARROW_RE.search(line, s + 1, e - 1):
+                continue
             for m in _COLON_RE.finditer(line, s + 1, e - 1):
                 yield Finding(
                     "E017",
@@ -583,6 +590,8 @@ def fix_E017_colon(src: Source) -> str:
     def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
         out = []
         for s, e in find_inline_math(line):
+            if not _ARROW_RE.search(line, s + 1, e - 1):
+                continue
             for m in _COLON_RE.finditer(line, s + 1, e - 1):
                 colon = line.index(":", m.start(), m.end())
                 out.append((colon, colon + 1, r"\colon"))

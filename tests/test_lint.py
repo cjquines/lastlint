@@ -90,7 +90,7 @@ def test_dollar_in_asy_is_not_flagged():
         (r"\] \[", "E011"),
         (r"\begin{align*} a", "E012"),
         (r"foo\\\\", "E015"),
-        (r"$f : \mathbb{R}$", "E017"),
+        (r"$f : \mathbb{R} \to \mathbb{R}$", "E017"),
         ("\\begin{itemize}\n\\ii bad\n\\end{itemize}\n", "E013"),
         ("trailing spaces here   ", "E014"),
     ],
@@ -197,7 +197,11 @@ def test_fix_is_idempotent_on_clean_fixture():
         (r"$a | b$", r"$a \mid b$", "E009"),
         (r"$x...y$", r"$x\dots y$", "E004"),
         ("$$x = 1$$", r"\[x = 1\]", "E010"),
-        (r"$f : \mathbb{R}$", r"$f \colon \mathbb{R}$", "E017"),
+        (
+            r"$f : \mathbb{R} \to \mathbb{R}$",
+            r"$f \colon \mathbb{R} \to \mathbb{R}$",
+            "E017",
+        ),
         ("clean line  ", "clean line", "E014"),
     ],
 )
