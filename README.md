@@ -54,8 +54,10 @@ trailing whitespace.
 | E017 | `\colon` for function signatures                          |
 
 E013 applies to a conservative allowlist of envs (`align`, `itemize`,
-`enumerate`, `proof`, `theorem`, matrices, etc.); other envs are not
-checked. See `INDENT_ENVS` in `otis_latex_lint.py` to adjust.
+`enumerate`, matrices, etc.); other envs are not checked. Theorem-like envs
+(`proof`, `theorem`, `lemma`, `remark`, …) are excluded on purpose — their
+body is prose, where indentation is a much weaker convention. See
+`INDENT_ENVS` in `otis_latex_lint.py` to adjust.
 
 Rules **not** implemented:
 

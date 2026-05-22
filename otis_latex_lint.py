@@ -330,6 +330,11 @@ def rule_E015_double_backslash_break(src: Source) -> Iterator[Finding]:
 
 # Envs whose body lines should be indented at least 2 spaces per nesting level.
 # Conservative allowlist; other envs (document, center, asy, ...) are excluded.
+#
+# Theorem-like envs (proof, theorem, lemma, remark, ...) are deliberately NOT
+# included: their body is ordinary prose paragraphs, and indenting prose inside
+# `\begin{proof}` is a much weaker convention than indenting `\item`s or align
+# rows. Including them flags essentially every proof in a typical document.
 INDENT_ENVS = frozenset(
     {
         "align",
@@ -348,21 +353,6 @@ INDENT_ENVS = frozenset(
         "smallmatrix",
         "itemize",
         "enumerate",
-        "remark",
-        "remark*",
-        "proof",
-        "theorem",
-        "theorem*",
-        "lemma",
-        "lemma*",
-        "corollary",
-        "corollary*",
-        "definition",
-        "definition*",
-        "example",
-        "example*",
-        "proposition",
-        "proposition*",
     }
 )
 
