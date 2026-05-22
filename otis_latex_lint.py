@@ -380,32 +380,10 @@ def rule_E015_double_backslash_break(src: Source) -> Iterator[Finding]:
 
 
 # Envs whose body lines should be indented at least 2 spaces per nesting level.
-# Conservative allowlist; other envs (document, center, asy, ...) are excluded.
-#
-# Theorem-like envs (proof, theorem, lemma, remark, ...) are deliberately NOT
-# included: their body is ordinary prose paragraphs, and indenting prose inside
-# `\begin{proof}` is a much weaker convention than indenting `\item`s or align
-# rows. Including them flags essentially every proof in a typical document.
-INDENT_ENVS = frozenset(
-    {
-        "align",
-        "align*",
-        "gather",
-        "gather*",
-        "equation",
-        "equation*",
-        "cases",
-        "dcases",
-        "matrix",
-        "pmatrix",
-        "bmatrix",
-        "vmatrix",
-        "Vmatrix",
-        "smallmatrix",
-        "itemize",
-        "enumerate",
-    }
-)
+# Denylist: every env counts toward indent depth except these. `document`,
+# `center`, and `quote` wrap ordinary prose that idiomatically stays flush
+# left; the verbatim envs have their contents masked and must not nest depth.
+NO_INDENT_ENVS = frozenset({"document", "center", "quote"}) | set(VERBATIM_ENVS)
 
 _BEGIN_END_RE = re.compile(r"\\(begin|end)\{([^}]+)\}")
 
@@ -443,7 +421,7 @@ def rule_E013_indentation(src: Source) -> Iterator[Finding]:
         # Update depth from all begin/end on this line.
         for m in _BEGIN_END_RE.finditer(line):
             kind, env = m.group(1), m.group(2)
-            if env in INDENT_ENVS:
+            if env not in NO_INDENT_ENVS:
                 depth += 1 if kind == "begin" else -1
         if depth < 0:
             depth = 0  # tolerate mismatched envs
@@ -692,7 +670,7 @@ def fix_E017_colon(src: Source) -> str:
 
 
 def fix_E013_indentation(src: Source) -> str:
-    """Pad under-indented lines inside INDENT_ENVS to ``2 * depth`` spaces.
+    """Pad under-indented lines inside indenting envs to ``2 * depth`` spaces.
 
     Lines already at or beyond the expected indent are left untouched, so
     deeper hand-alignment (e.g. continuation lines) is preserved.
@@ -725,7 +703,7 @@ def fix_E013_indentation(src: Source) -> str:
 
         for m in _BEGIN_END_RE.finditer(line):
             kind, env = m.group(1), m.group(2)
-            if env in INDENT_ENVS:
+            if env not in NO_INDENT_ENVS:
                 depth += 1 if kind == "begin" else -1
         if depth < 0:
             depth = 0

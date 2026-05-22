@@ -58,11 +58,11 @@ unresolved when neither side determines the spacing.
 | E015 | No `\\\\` paragraph break                                 |
 | E017 | `\colon` for function signatures                          |
 
-E013 applies to a conservative allowlist of envs (`align`, `itemize`,
-`enumerate`, matrices, etc.); other envs are not checked. Theorem-like envs
-(`proof`, `theorem`, `lemma`, `remark`, …) are excluded on purpose — their
-body is prose, where indentation is a much weaker convention. See
-`INDENT_ENVS` in `otis_latex_lint.py` to adjust.
+E013 checks every env except a small denylist: `document`, `center`, `quote`,
+and the verbatim envs (`asy`, `verbatim`, `lstlisting`, …). Those wrap prose
+that idiomatically stays flush left; everything else — including theorem-like
+envs — should have its body indented. See `NO_INDENT_ENVS` in
+`otis_latex_lint.py` to adjust.
 
 Rules **not** implemented:
 
