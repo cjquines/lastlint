@@ -12,12 +12,11 @@ repos:
   - repo: https://github.com/cjquines/otis-latex-linter
     rev: v0.1.0 # x-release-please-version
     hooks:
-      - id: otis-latex-lint
+      - id: otis-latex-lint-fix
 ```
 
-To auto-fix supported rules instead of only reporting, use the
-`otis-latex-lint-fix` hook id (it modifies files in place, then reports
-anything left).
+To only report errors rather than auto-fixing them,
+use the `otis-latex-lint` hook id.
 
 ## Standalone
 
