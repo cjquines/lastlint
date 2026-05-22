@@ -24,6 +24,9 @@ otis-latex-lint path/to/file.tex
 
 Output format is `file:line:col: EXXX: message`, parseable by editors.
 
+Pass `--ignore E001,E013` to skip rules entirely — both reporting and (with
+`--fix`) fixing. Useful for projects that don't follow a particular rule.
+
 Pass `--fix` to auto-fix supported rules in place: `E002`, `E003`, `E004`,
 `E005`, `E006`, `E009`, `E010`, `E013`, `E014`, `E017`. For example, E013
 pads under-indented lines inside indent envs to `2 * depth` spaces

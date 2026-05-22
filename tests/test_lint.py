@@ -179,6 +179,17 @@ def test_E002_ignores_umlaut_accent():
     assert fix_text(text) == text
 
 
+def test_ignore_skips_reporting():
+    text = 'Say "hi"\n'
+    assert "E002" in {f.rule for f in lint_text(text)}
+    assert "E002" not in {f.rule for f in lint_text(text, frozenset({"E002"}))}
+
+
+def test_ignore_skips_fixing():
+    text = 'Say "hi"\n'
+    assert fix_text(text, frozenset({"E002"})) == text
+
+
 def test_fix_E010_alternates_pairs():
     text = "$$a$$ and $$b$$"
     assert fix_text(text) == r"\[a\] and \[b\]"

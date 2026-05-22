@@ -630,20 +630,22 @@ RULES: list[Callable[[Source], Iterator[Finding]]] = [
 # --------------------------------------------------------------------------- #
 
 
-def lint_text(text: str) -> list[Finding]:
+def lint_text(text: str, ignore: frozenset[str] = frozenset()) -> list[Finding]:
     src = Source(text)
     findings: list[Finding] = []
     for rule in RULES:
         for f in rule(src):
-            if not src.is_suppressed(f.line, f.rule):
+            if f.rule not in ignore and not src.is_suppressed(f.line, f.rule):
                 findings.append(f)
     findings.sort(key=lambda f: (f.line, f.col, f.rule))
     return findings
 
 
-def fix_text(text: str) -> str:
+def fix_text(text: str, ignore: frozenset[str] = frozenset()) -> str:
     """Apply every available fixer in turn. Idempotent on clean input."""
-    for fixer in FIXERS.values():
+    for rule, fixer in FIXERS.items():
+        if rule in ignore:
+            continue
         src = Source(text)
         text = fixer(src)
     return text
@@ -656,8 +658,24 @@ def read_text(path: Path) -> str:
         return path.read_text(encoding="latin-1")
 
 
-def lint_file(path: Path) -> list[Finding]:
-    return lint_text(read_text(path))
+def lint_file(path: Path, ignore: frozenset[str] = frozenset()) -> list[Finding]:
+    return lint_text(read_text(path), ignore)
+
+
+ALL_RULES = frozenset(
+    rule.__name__.split("_")[1] for rule in RULES
+)  # {"E001", "E002", ...}
+
+
+def parse_ignore(value: str) -> frozenset[str]:
+    """Parse a comma-separated rule list, validating each code."""
+    codes = {tok.strip().upper() for tok in value.split(",") if tok.strip()}
+    unknown = codes - ALL_RULES
+    if unknown:
+        raise argparse.ArgumentTypeError(
+            f"unknown rule(s): {', '.join(sorted(unknown))}"
+        )
+    return frozenset(codes)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -672,16 +690,23 @@ def main(argv: list[str] | None = None) -> int:
         help=f"auto-fix rules where possible ({', '.join(sorted(FIXERS))}); "
         "writes files in place",
     )
+    ap.add_argument(
+        "--ignore",
+        type=parse_ignore,
+        default=frozenset(),
+        metavar="E0XX,E0YY",
+        help="comma-separated rule codes to skip (both reporting and fixing)",
+    )
     args = ap.parse_args(argv)
 
     bad = 0
     for path in args.files:
         if args.fix:
             original = read_text(path)
-            fixed = fix_text(original)
+            fixed = fix_text(original, args.ignore)
             if fixed != original:
                 path.write_text(fixed, encoding="utf-8")
-        for f in lint_file(path):
+        for f in lint_file(path, args.ignore):
             print(f.format(str(path)))
             bad += 1
     return 1 if bad else 0
