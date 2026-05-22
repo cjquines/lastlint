@@ -140,6 +140,39 @@ def test_fix_E013_skips_overflow():
     assert f"\n{body}\n" in fixed  # untouched, no leading spaces added
 
 
+def test_E013_ignores_commented_out_env():
+    # A fully commented-out environment block must not be treated as a real
+    # env: no E013 finding, and the fixer must not re-indent the comment lines.
+    text = "%\\begin{enumerate}\n%  \\ii commented\n%\\end{enumerate}\n"
+    assert "E013" not in rules(text)
+    assert fix_text(text) == text
+
+
+def test_E013_ignores_env_after_trailing_comment():
+    # A \begin inside a trailing comment is not a real env either.
+    text = "real text  % \\begin{itemize}\nnot indented\n"
+    assert "E013" not in rules(text)
+
+
+def test_comments_are_not_linted():
+    # Commented-out LaTeX is masked, so no rule fires on it. This line would
+    # trigger E002 (literal quote) and E009 (|...|) if it were real code.
+    text = '% a "quoted" thing with |bars|\n'
+    assert rules(text) == set()
+
+
+def test_comment_masking_keeps_real_code_on_the_line():
+    # Masking the comment must not blind a rule to code before the %.
+    text = 'say "hi"  % a "quoted" comment\n'
+    assert "E002" in rules(text)
+
+
+def test_content_after_end_document_is_not_linted():
+    # LaTeX ignores everything after \end{document}; so does the linter.
+    text = '\\end{document}\nleftover "quoted" junk\n'
+    assert rules(text) == set()
+
+
 def test_fix_E013_skips_verbatim():
     text = "\\begin{itemize}\n\\begin{verbatim}\nfoo\n\\end{verbatim}\n\\end{itemize}\n"
     fixed = fix_text(text)

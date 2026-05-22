@@ -46,16 +46,22 @@ class Finding:
 
 
 class Source:
-    """The text of a file, plus a version with verbatim envs blanked out.
+    """The text of a file, plus a version with verbatim envs, comments, and
+    anything after ``\\end{document}`` blanked out.
 
     Blanking preserves line numbers and character offsets, so positions
     reported against ``masked`` are still valid against the original text.
+    Comment masking means rules never lint commented-out LaTeX; only E001
+    (line length) and E014 (trailing whitespace), which scan raw ``lines``,
+    still see comment text.
     """
 
     def __init__(self, text: str):
         self.text = text
         self.lines = text.split("\n")
         self.masked_lines, self.verbatim_lines = scan_verbatim(self.lines)
+        self.masked_lines = [mask_comment(line) for line in self.masked_lines]
+        self.masked_lines = mask_after_end_document(self.masked_lines)
         self.masked = "\n".join(self.masked_lines)
         self.suppressions = parse_suppressions(self.lines)
 
@@ -101,6 +107,40 @@ def mask_verbatim(text: str) -> str:
     """Backwards-compatible wrapper used by tests."""
     masked_lines, _ = scan_verbatim(text.split("\n"))
     return "\n".join(masked_lines)
+
+
+_COMMENT_RE = re.compile(r"(?<!\\)%")
+
+
+def mask_comment(line: str) -> str:
+    """Blank a trailing LaTeX comment (``%`` to end of line) with spaces.
+
+    Run after verbatim masking, so any ``%`` here is a genuine comment, not
+    verbatim content. ``\\%`` (an escaped literal percent) is left alone.
+    """
+    m = _COMMENT_RE.search(line)
+    return line[: m.start()] + " " * (len(line) - m.start()) if m else line
+
+
+_END_DOCUMENT_RE = re.compile(r"\\end\{document\}")
+
+
+def mask_after_end_document(lines: list[str]) -> list[str]:
+    """Blank everything strictly after the first ``\\end{document}``.
+
+    LaTeX ignores it, so neither should the linter. Run after verbatim and
+    comment masking, so an ``\\end{document}`` inside a verbatim block or a
+    comment doesn't count.
+    """
+    out = list(lines)
+    for i, line in enumerate(lines):
+        m = _END_DOCUMENT_RE.search(line)
+        if m:
+            out[i] = line[: m.end()] + " " * (len(line) - m.end())
+            for j in range(i + 1, len(lines)):
+                out[j] = " " * len(lines[j])
+            break
+    return out
 
 
 def parse_suppressions(lines: list[str]) -> dict[int, set[str]]:
@@ -292,10 +332,6 @@ def rule_E012_align_line(src: Source) -> Iterator[Finding]:
         for m in pat.finditer(line):
             before = line[: m.start()]
             after = line[m.end() :]
-            # strip a trailing comment
-            cmt = re.search(r"(?<!\\)%", after)
-            if cmt:
-                after = after[: cmt.start()]
             if before.strip() or after.strip():
                 yield Finding(
                     "E012",
@@ -558,7 +594,9 @@ def fix_E013_indentation(src: Source) -> str:
         )
         effective_depth = depth - 1 if line_starts_with_end else depth
 
-        if effective_depth > 0 and raw.strip() and i not in src.verbatim_lines:
+        # ``line`` is comment-masked, so a comment-only line is blank here and
+        # is left untouched — consistent with the rule, which won't flag it.
+        if effective_depth > 0 and line.strip() and i not in src.verbatim_lines:
             indent = len(raw) - len(raw.lstrip(" "))
             expected = 2 * effective_depth
             stripped = raw.lstrip(" ")
