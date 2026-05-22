@@ -10,7 +10,7 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/cjquines/otis-latex-linter
-    rev: v0.1.0
+    rev: v0.1.0 # x-release-please-version
     hooks:
       - id: otis-latex-lint
 ```
