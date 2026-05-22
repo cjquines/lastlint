@@ -195,17 +195,31 @@ def offset_to_line_col(text: str, offset: int) -> tuple[int, int]:
 # --------------------------------------------------------------------------- #
 
 
+_URL_RE = re.compile(r"https?://")
+
+
+def _is_comment_line(line: str) -> bool:
+    """True if the line is entirely a LaTeX comment (only whitespace before %)."""
+    m = _COMMENT_RE.search(line)
+    return m is not None and not line[: m.start()].strip()
+
+
 def rule_E001_line_length(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.lines, 1):
         if i in src.verbatim_lines:
             continue
-        if len(line) > MAX_LINE_LENGTH:
-            yield Finding(
-                "E001",
-                i,
-                MAX_LINE_LENGTH + 1,
-                f"line is {len(line)} characters; max {MAX_LINE_LENGTH}",
-            )
+        if len(line) <= MAX_LINE_LENGTH:
+            continue
+        # A URL has no breakable whitespace, and a fully-commented line is
+        # dead code the author can leave long; neither is worth flagging.
+        if _URL_RE.search(line) or _is_comment_line(line):
+            continue
+        yield Finding(
+            "E001",
+            i,
+            MAX_LINE_LENGTH + 1,
+            f"line is {len(line)} characters; max {MAX_LINE_LENGTH}",
+        )
 
 
 # A bare ASCII double quote, but not `\"` (the LaTeX umlaut accent, e.g. `\"o`).

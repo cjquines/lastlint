@@ -64,6 +64,12 @@ unresolved when neither side determines the spacing.
 | E015 | No `\\\\` paragraph break                                 |
 | E017 | `\colon` for function signatures                          |
 
+E001 skips two kinds of unfixable long lines: those containing a URL
+(`http://` or `https://`), which has no breakable whitespace, and
+fully-commented lines (only whitespace before the `%`), which are dead code
+the author can leave long. Lines with a long _trailing_ comment after real
+content are still flagged.
+
 E013 checks every env except a small denylist: `document`, `center`, `quote`,
 and the verbatim envs (`asy`, `verbatim`, `lstlisting`, …). Those wrap prose
 that idiomatically stays flush left; everything else — including theorem-like

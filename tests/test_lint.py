@@ -65,6 +65,23 @@ def test_suppression_pragma():
     assert "E002" not in rules(text)
 
 
+def test_E001_skips_url_lines():
+    text = "  \\href{https://example.com/" + "x" * 100 + "}{link}\n"
+    assert len(text) > 101
+    assert "E001" not in rules(text)
+
+
+def test_E001_skips_comment_lines():
+    text = "% " + "a" * 120 + "\n"
+    assert "E001" not in rules(text)
+
+
+def test_E001_still_flags_long_trailing_comment_on_code():
+    # Only fully-commented lines are exempt; code with a long tail is not.
+    text = "Some real LaTeX content here " + "b" * 90 + "  % short\n"
+    assert "E001" in rules(text)
+
+
 def test_dollar_in_asy_is_not_flagged():
     text = '\\begin{asy}\nlabel("$X$");\n\\end{asy}\n'
     assert not lint_text(text)
