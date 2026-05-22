@@ -221,12 +221,17 @@ def rule_E002_literal_quote(src: Source) -> Iterator[Finding]:
 
 
 _OP_RE = re.compile(r"(?<![A-Za-z\\])(" + "|".join(OPERATORS) + r")(?![A-Za-z])")
+_OPERATORNAME_RE = re.compile(r"\\operatorname\*?\{$")
 
 
 def rule_E003_bare_operator(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.masked_lines, 1):
         for s, e in find_inline_math(line):
             for m in _OP_RE.finditer(line, s, e):
+                # An operator name spelled out inside \operatorname{...} is
+                # already a command, not a bare operator.
+                if _OPERATORNAME_RE.search(line, 0, m.start()):
+                    continue
                 yield Finding(
                     "E003",
                     i,
@@ -488,6 +493,8 @@ def fix_E003_bare_operator(src: Source) -> str:
         out = []
         for s, e in find_inline_math(line):
             for m in _OP_RE.finditer(line, s, e):
+                if _OPERATORNAME_RE.search(line, 0, m.start()):
+                    continue
                 out.append((m.start(), m.end(), "\\" + m.group(1)))
         return out
 
