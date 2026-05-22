@@ -166,9 +166,13 @@ def rule_E001_line_length(src: Source) -> Iterator[Finding]:
             )
 
 
+# A bare ASCII double quote, but not `\"` (the LaTeX umlaut accent, e.g. `\"o`).
+_LITERAL_QUOTE_RE = re.compile(r'(?<!\\)"')
+
+
 def rule_E002_literal_quote(src: Source) -> Iterator[Finding]:
     for i, line in enumerate(src.masked_lines, 1):
-        for m in re.finditer(r'"', line):
+        for m in _LITERAL_QUOTE_RE.finditer(line):
             yield Finding(
                 "E002", i, m.start() + 1, "literal \" is forbidden; use `` or ''"
             )
@@ -441,7 +445,7 @@ def fix_E002_literal_quote(src: Source) -> str:
 
     def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
         out = []
-        for m in re.finditer(r'"', line):
+        for m in _LITERAL_QUOTE_RE.finditer(line):
             pos = m.start()
             prev = line[pos - 1] if pos > 0 else " "
             repl = "''" if prev.isalnum() or prev in ".,;:!?)]}" else "``"

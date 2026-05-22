@@ -172,6 +172,13 @@ def test_fix_E002_skips_verbatim():
     assert fix_text(text) == text
 
 
+def test_E002_ignores_umlaut_accent():
+    # `\"` is the umlaut accent (e.g. Erd\"os), not a literal quote.
+    text = 'Paul Erd\\"os and Kurt G\\"{o}del.\n'
+    assert "E002" not in rules(text)
+    assert fix_text(text) == text
+
+
 def test_fix_E010_alternates_pairs():
     text = "$$a$$ and $$b$$"
     assert fix_text(text) == r"\[a\] and \[b\]"
