@@ -514,11 +514,102 @@ def fix_E003_bare_operator(src: Source) -> str:
     return _per_line_fix(src, edits)
 
 
+_DOTS_RE = re.compile(r"\\(?:ldots|cdots)\b|\.{3,}")
+_DOTS_COMMA = {",", ";"}
+_DOTS_BINOP_CHARS = set("+-=<>")
+# Common binary-operator / relation control words. amsmath's \dotsb covers
+# both, so no need to distinguish them.
+_DOTS_BINOP_WORDS = {
+    "cdot",
+    "cdots",
+    "times",
+    "pm",
+    "mp",
+    "cup",
+    "cap",
+    "oplus",
+    "otimes",
+    "le",
+    "ge",
+    "leq",
+    "geq",
+    "ne",
+    "neq",
+    "approx",
+    "sim",
+    "simeq",
+    "cong",
+    "equiv",
+    "subset",
+    "subseteq",
+    "supset",
+    "supseteq",
+    "to",
+    "mapsto",
+    "wedge",
+    "vee",
+    "div",
+    "ast",
+    "star",
+    "circ",
+    "bullet",
+    "ll",
+    "gg",
+    "prec",
+    "succ",
+}
+
+
+def _dots_token_class(token: str) -> str | None:
+    """Classify a neighbouring token as 'comma', 'binop', or None."""
+    if token in _DOTS_COMMA:
+        return "comma"
+    if token in _DOTS_BINOP_CHARS:
+        return "binop"
+    if token.startswith("\\") and token[1:] in _DOTS_BINOP_WORDS:
+        return "binop"
+    return None
+
+
 def fix_E004_old_dots(src: Source) -> str:
+    """Replace \\ldots/\\cdots/literal ... with the right \\dots variant.
+
+    \\dots picks its spacing from the *following* token, so a bare \\dots is
+    only safe when that token determines it. When it doesn't (end of math, a
+    letter, a closing delimiter), we look at the *preceding* token and emit an
+    explicit \\dotsc/\\dotsb instead; if neither side resolves it and the
+    author wrote \\cdots, we leave it for them (the rule still flags it).
+    """
+
     def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
+        spans = find_inline_math(line)
         out = []
-        for m in re.finditer(r"\\(?:ldots|cdots)\b|\.{3,}", line):
-            repl = r"\dots"
+        for m in _DOTS_RE.finditer(line):
+            span = next(((s, e) for s, e in spans if s < m.start() < e), None)
+            if span is None:
+                # Prose ellipsis: \dots is correct and context-free.
+                repl = r"\dots"
+            else:
+                # Search only within the enclosing $...$, excluding the $s.
+                lo, hi = span[0] + 1, span[1] - 1
+                before = line[lo : m.start()].rstrip()
+                after = line[m.end() : hi].lstrip()
+                cw = re.search(r"\\[a-zA-Z]+$", before)
+                prev = cw.group() if cw else before[-1:]
+                cwf = re.match(r"\\[a-zA-Z]+", after)
+                nxt = cwf.group() if cwf else after[:1]
+
+                if _dots_token_class(nxt) is not None:
+                    repl = r"\dots"  # \dots detects this forward correctly
+                elif _dots_token_class(prev) == "comma":
+                    repl = r"\dotsc"
+                elif _dots_token_class(prev) == "binop":
+                    repl = r"\dotsb"
+                elif m.group() == r"\cdots":
+                    continue  # undeterminable; leave it for the author
+                else:
+                    repl = r"\dots"
+
             # `2...x` -> `2\dots x`: a control word needs a space before an
             # alphanumeric, or it would be read as part of the command name.
             if m.group().startswith(".") and m.end() < len(line):

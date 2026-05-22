@@ -190,7 +190,7 @@ def test_fix_is_idempotent_on_clean_fixture():
     [
         ('Say "hi" loud', "Say ``hi'' loud", "E002"),
         ("$sin(x) + cos(y)$", r"$\sin(x) + \cos(y)$", "E003"),
-        (r"$x \ldots y \cdots z$", r"$x \dots y \dots z$", "E004"),
+        (r"$1, \ldots, n$", r"$1, \dots, n$", "E004"),
         (r"We have $x = 3.$ done", r"We have $x = 3$. done", "E005"),
         ("foo , bar ; baz", "foo, bar; baz", "E006"),
         ("$a||b$", r"$a\parallel b$", "E009"),
@@ -219,6 +219,33 @@ def test_fix_converges_in_one_call():
     fixed = fix_text(text)
     assert fix_text(fixed) == fixed
     assert not {f.rule for f in lint_text(fixed)} & {"E004", "E006"}
+
+
+@pytest.mark.parametrize(
+    "before,after",
+    [
+        # Forward token resolves it: plain \dots, even from \cdots.
+        (r"$a \cdots, b$", r"$a \dots, b$"),
+        (r"$a \cdots + b$", r"$a \dots + b$"),
+        # Forward token doesn't resolve it; the preceding token does.
+        (r"$1 + 2 + \cdots$", r"$1 + 2 + \dotsb$"),
+        (r"$a_1, \ldots$", r"$a_1, \dotsc$"),
+        (r"$x = 1 \le 2 \le \cdots$", r"$x = 1 \le 2 \le \dotsb$"),
+        # \ldots between letters: low dots are fine, so \dots.
+        (r"$x \ldots y$", r"$x \dots y$"),
+    ],
+)
+def test_fix_E004_uses_context(before: str, after: str):
+    fixed = fix_text(before)
+    assert fixed == after
+    assert fix_text(fixed) == fixed
+
+
+def test_fix_E004_leaves_undeterminable_cdots():
+    # \cdots between two letters (a product) can't be safely auto-resolved.
+    text = r"$x \cdots y$"
+    assert fix_text(text) == text
+    assert "E004" in rules(text)
 
 
 def test_fix_E002_skips_verbatim():

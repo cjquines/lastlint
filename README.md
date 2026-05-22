@@ -34,7 +34,9 @@ Pass `--fix` to auto-fix supported rules in place: `E002`, `E003`, `E004`,
 `E005`, `E006`, `E009`, `E010`, `E013`, `E014`, `E017`. For example, E013
 pads under-indented lines inside indent envs to `2 * depth` spaces
 (already-correctly-indented or deeper lines are left alone), and E014 strips
-trailing whitespace.
+trailing whitespace. E004 picks the right `\dots` variant from context
+(`\dotsc` after a comma, `\dotsb` after an operator) and leaves a `\cdots`
+unresolved when neither side determines the spacing.
 
 ## Rules
 
