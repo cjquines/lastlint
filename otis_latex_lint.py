@@ -274,6 +274,15 @@ def rule_E012_align_line(src: Source) -> Iterator[Finding]:
                 )
 
 
+def rule_E014_trailing_whitespace(src: Source) -> Iterator[Finding]:
+    for i, line in enumerate(src.lines, 1):
+        if i in src.verbatim_lines:
+            continue
+        m = re.search(r"[ \t]+$", line)
+        if m:
+            yield Finding("E014", i, m.start() + 1, "trailing whitespace")
+
+
 def rule_E015_double_backslash_break(src: Source) -> Iterator[Finding]:
     # Match literal four backslashes followed by end-of-line or whitespace.
     # `\\` (two chars) inside a tabular/align is legal; `\\\\` as a paragraph
@@ -532,6 +541,13 @@ def fix_E013_indentation(src: Source) -> str:
     return "\n".join(out)
 
 
+def fix_E014_trailing_whitespace(src: Source) -> str:
+    out = []
+    for i, line in enumerate(src.lines, 1):
+        out.append(line if i in src.verbatim_lines else line.rstrip(" \t"))
+    return "\n".join(out)
+
+
 FIXERS: dict[str, Callable[[Source], str]] = {
     "E002": fix_E002_literal_quote,
     "E003": fix_E003_bare_operator,
@@ -541,6 +557,7 @@ FIXERS: dict[str, Callable[[Source], str]] = {
     "E009": fix_E009_bad_math_ops,
     "E010": fix_E010_double_dollar,
     "E013": fix_E013_indentation,
+    "E014": fix_E014_trailing_whitespace,
     "E017": fix_E017_colon,
 }
 
@@ -558,6 +575,7 @@ RULES: list[Callable[[Source], Iterator[Finding]]] = [
     rule_E011_adjacent_display,
     rule_E012_align_line,
     rule_E013_indentation,
+    rule_E014_trailing_whitespace,
     rule_E015_double_backslash_break,
     rule_E017_colon,
 ]

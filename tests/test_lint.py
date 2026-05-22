@@ -26,6 +26,7 @@ def test_violations_fixture_covers_all_rules():
         "E011",
         "E012",
         "E013",
+        "E014",
         "E015",
         "E017",
     }
@@ -86,6 +87,7 @@ def test_dollar_in_asy_is_not_flagged():
         (r"foo\\\\", "E015"),
         (r"$f : \mathbb{R}$", "E017"),
         ("\\begin{itemize}\n\\ii bad\n\\end{itemize}\n", "E013"),
+        ("trailing spaces here   ", "E014"),
     ],
 )
 def test_individual_rule(snippet: str, rule: str):
@@ -148,6 +150,7 @@ def test_fix_is_idempotent_on_clean_fixture():
         ("$a||b$", r"$a\parallel b$", "E009"),
         ("$$x = 1$$", r"\[x = 1\]", "E010"),
         (r"$f : \mathbb{R}$", r"$f \colon \mathbb{R}$", "E017"),
+        ("clean line  ", "clean line", "E014"),
     ],
 )
 def test_fix_resolves_rule(before: str, after: str, rule: str):

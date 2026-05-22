@@ -15,17 +15,6 @@ repos:
       - id: otis-latex-lint
 ```
 
-Also recommended (cover rules this linter does not):
-
-```yaml
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v5.0.0
-  hooks:
-    - id: trailing-whitespace
-      files: \.tex$
-# latexindent.pl handles rule 13 (environment indentation)
-```
-
 ## Standalone
 
 ```sh
@@ -35,9 +24,11 @@ otis-latex-lint path/to/file.tex
 
 Output format is `file:line:col: EXXX: message`, parseable by editors.
 
-Pass `--fix` to auto-fix supported rules in place. Currently fixed: `E013`
-(under-indented lines inside indent envs are padded to `2 * depth` spaces;
-already-correctly-indented or deeper lines are left alone).
+Pass `--fix` to auto-fix supported rules in place: `E002`, `E003`, `E004`,
+`E005`, `E006`, `E009`, `E010`, `E013`, `E014`, `E017`. For example, E013
+pads under-indented lines inside indent envs to `2 * depth` spaces
+(already-correctly-indented or deeper lines are left alone), and E014 strips
+trailing whitespace.
 
 ## Rules
 
@@ -55,6 +46,7 @@ already-correctly-indented or deeper lines are left alone).
 | E011 | No adjacent `\[ ... \]` blocks                |
 | E012 | `\begin{align*}` / `\end{align*}` on own line |
 | E013 | Env contents indented at least 2 spaces       |
+| E014 | No trailing whitespace                        |
 | E015 | No `\\\\` paragraph break                     |
 | E017 | `\colon` for function signatures              |
 
@@ -65,7 +57,6 @@ checked. See `INDENT_ENVS` in `otis_latex_lint.py` to adjust.
 Rules **not** implemented:
 
 - Rule 8 (balanced delimiters): hard to lint reliably.
-- Rule 14 (trailing whitespace): use pre-commit's `trailing-whitespace`.
 - Rule 16 (variables in prose): requires natural-language understanding.
 
 ## Suppression
