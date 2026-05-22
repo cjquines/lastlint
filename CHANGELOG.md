@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/cjquines/otis-latex-linter/compare/v0.2.0...v0.3.0) (2026-05-22)
+
+
+### Features
+
+* exempt URL and comment lines from E001 ([9e652fa](https://github.com/cjquines/otis-latex-linter/commit/9e652fa7f88ea4ea8c16ec986c2a54bc149265a2))
+* friendlier standalone CLI output and glob support ([2ffba81](https://github.com/cjquines/otis-latex-linter/commit/2ffba812e94358c62bb3c28c0130d6bc1cbfeace))
+
+
+### Bug Fixes
+
+* don't flag operator names inside \operatorname{...} in E003 ([fa6d131](https://github.com/cjquines/otis-latex-linter/commit/fa6d131bcbb2ffb23301b431354312412d6cf08e))
+
 ## [0.2.0](https://github.com/cjquines/otis-latex-linter/compare/v0.1.0...v0.2.0) (2026-05-22)
 
 
