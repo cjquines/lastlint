@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0](https://github.com/cjquines/lastlint/compare/v0.3.0...v0.4.0) (2026-05-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* rename to lastlint
+
+### Documentation
+
+* **readme:** update docs ([cb1dd42](https://github.com/cjquines/lastlint/commit/cb1dd420bd302847824492329e13ff29e2eeb75d))
+
+
+### Miscellaneous Chores
+
+* rename to lastlint ([c46d75d](https://github.com/cjquines/lastlint/commit/c46d75d3b603ce36f9b7a02a4f4f29697fe11971))
+
 ## [0.3.0](https://github.com/cjquines/lastlint/compare/v0.2.0...v0.3.0) (2026-05-22)
 
 
