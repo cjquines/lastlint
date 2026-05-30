@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from otis_latex_lint import find_inline_math, fix_text, lint_text, mask_verbatim
+from lastlint import find_inline_math, fix_text, lint_text, mask_verbatim
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -61,7 +61,7 @@ def test_verbatim_envs_are_masked():
 
 
 def test_suppression_pragma():
-    text = 'A line with "literal" quotes.  % latex-lint: disable=E002\n'
+    text = 'A line with "literal" quotes.  % lastlint: disable=E002\n'
     assert "E002" not in rules(text)
 
 

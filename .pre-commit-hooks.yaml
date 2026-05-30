@@ -1,13 +1,13 @@
-- id: otis-latex-lint
+- id: lastlint
   name: Evan's LaTeX style guide
   description: Lints .tex files against Evan Chen's LaTeX style guide.
-  entry: otis-latex-lint
+  entry: lastlint
   language: python
   types: [tex]
 
-- id: otis-latex-lint-fix
+- id: lastlint-fix
   name: Evan's LaTeX style guide (autofix)
   description: Auto-fixes supported rules, then reports anything left.
-  entry: otis-latex-lint --fix
+  entry: lastlint --fix
   language: python
   types: [tex]

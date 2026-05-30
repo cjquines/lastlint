@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "otis-latex-lint"
+name = "lastlint"
 version = "0.3.0"
 description = "Linter for Evan Chen's LaTeX style guide"
 requires-python = ">=3.9"
@@ -11,13 +11,13 @@ license = "MIT"
 authors = [{ name = "CJ Quines" }]
 
 [project.scripts]
-otis-latex-lint = "otis_latex_lint:main"
+lastlint = "lastlint:main"
 
 [dependency-groups]
 dev = ["prek", "pytest"]
 
 [tool.hatch.build.targets.wheel]
-include = ["otis_latex_lint.py"]
+include = ["lastlint.py"]
 
 [tool.hatch.build.targets.sdist]
-include = ["otis_latex_lint.py", "README.md", "tests/"]
+include = ["lastlint.py", "README.md", "tests/"]

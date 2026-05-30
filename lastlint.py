@@ -28,7 +28,7 @@ OPERATORS = (
 # Envs whose contents are not LaTeX prose and should be skipped.
 VERBATIM_ENVS = ("asy", "asydef", "verbatim", "lstlisting", "minted")
 
-SUPPRESS_RE = re.compile(r"%\s*latex-lint:\s*disable=([A-Z0-9, ]+)")
+SUPPRESS_RE = re.compile(r"%\s*lastlint:\s*disable=([A-Z0-9, ]+)")
 
 
 @dataclass(frozen=True)
@@ -912,7 +912,7 @@ def expand_files(patterns: list[str]) -> tuple[list[Path], list[str]]:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
-        prog="otis-latex-lint",
+        prog="lastlint",
         description="Lint .tex files against Evan Chen's LaTeX style guide.",
     )
     ap.add_argument(

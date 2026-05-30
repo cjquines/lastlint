@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 A linter for [Evan Chen's LaTeX style guide](https://web.evanchen.cc/latex-style-guide.html),
-shipped as a single-module package (`otis_latex_lint.py`) and as a pre-commit hook.
+shipped as a single-module package (`lastlint.py`) and as a pre-commit hook.
 
 ## Commands
 
@@ -13,8 +13,8 @@ shipped as a single-module package (`otis_latex_lint.py`) and as a pre-commit ho
 pip install -e .[dev]   # editable install with prek + pytest
 pytest                  # run the test suite
 pytest tests/test_lint.py::test_clean_fixture_has_no_findings   # single test
-otis-latex-lint path/to/file.tex          # lint
-otis-latex-lint --fix path/to/file.tex    # auto-fix in place
+lastlint path/to/file.tex          # lint
+lastlint --fix path/to/file.tex    # auto-fix in place
 prek run --all-files                      # run repo's own hooks (ruff, etc.)
 ```
 
@@ -23,7 +23,7 @@ Commit messages must be conventional-commit format (enforced by a commit-msg hoo
 
 ## Architecture
 
-Everything lives in `otis_latex_lint.py`. Tests in `tests/test_lint.py` plus
+Everything lives in `lastlint.py`. Tests in `tests/test_lint.py` plus
 two fixtures: `tests/fixtures/clean.tex` (must produce zero findings) and
 `tests/fixtures/violations.tex` (must trigger every implemented rule).
 
@@ -51,7 +51,7 @@ Pipeline:
   about raw bytes — this is what skips Asymptote/verbatim content.
 - For math-only rules, iterate `find_inline_math(line)` spans rather than
   matching the whole line.
-- Suppression (`% latex-lint: disable=EXXX`) and `--ignore` are handled
+- Suppression (`% lastlint: disable=EXXX`) and `--ignore` are handled
   centrally in `lint_text`/`fix_text`; rules don't deal with them.
 - Rule codes are not contiguous — E008 and E016 are intentionally unused
   (rules 8 and 16 of the guide are not implementable). Don't renumber.

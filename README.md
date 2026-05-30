@@ -1,4 +1,4 @@
-# otis-latex-linter
+# lastlint
 
 A linter for [Evan Chen's LaTeX style guide](https://web.evanchen.cc/latex-style-guide.html),
 packaged as a [pre-commit](https://pre-commit.com/) hook.
@@ -9,24 +9,24 @@ Add to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: https://github.com/cjquines/otis-latex-linter
+  - repo: https://github.com/cjquines/lastlint
     rev: v0.3.0 # x-release-please-version
     hooks:
-      - id: otis-latex-lint-fix
+      - id: lastlint-fix
 ```
 
 To only report errors rather than auto-fixing them,
-use the `otis-latex-lint` hook id.
+use the `lastlint` hook id.
 
 ## Standalone
 
 ```sh
 pip install .
-otis-latex-lint path/to/file.tex another.tex
+lastlint path/to/file.tex another.tex
 ```
 
 Multiple files are accepted, and glob patterns are expanded — handy when the
-pattern is quoted (`otis-latex-lint 'src/**/*.tex'`) or on Windows, where the
+pattern is quoted (`lastlint 'src/**/*.tex'`) or on Windows, where the
 shell does not glob. On a terminal, output is grouped per file and
 colorized with a summary line; when piped or redirected it falls back to the
 plain `file:line:col: EXXX: message` format parseable by editors. Force either
@@ -74,7 +74,7 @@ E013 checks every env except a small denylist: `document`, `center`, `quote`,
 and the verbatim envs (`asy`, `verbatim`, `lstlisting`, …). Those wrap prose
 that idiomatically stays flush left; everything else — including theorem-like
 envs — should have its body indented. See `NO_INDENT_ENVS` in
-`otis_latex_lint.py` to adjust.
+`lastlint.py` to adjust.
 
 Rules **not** implemented:
 
@@ -86,7 +86,7 @@ Rules **not** implemented:
 Add an inline comment to skip rules on a single line:
 
 ```latex
-This text has "intentional" quotes.  % latex-lint: disable=E002
+This text has "intentional" quotes.  % lastlint: disable=E002
 ```
 
 ## Asymptote and verbatim

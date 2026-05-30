@@ -7,7 +7,7 @@
         {
           "path": "uv.lock",
           "type": "toml",
-          "jsonpath": "$.package[?(@.name.value=='otis-latex-lint')].version"
+          "jsonpath": "$.package[?(@.name.value=='lastlint')].version"
         },
         {
           "path": "README.md",

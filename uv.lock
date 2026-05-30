@@ -16,7 +16,7 @@ wheels = [
 ]
 
 [[package]]
-name = "otis-latex-lint"
+name = "lastlint"
 version = "0.3.0"
 source = { editable = "." }
 

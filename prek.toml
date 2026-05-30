@@ -56,15 +56,15 @@ repo = "https://github.com/JoC0de/pre-commit-prettier"
 rev = "v3.8.3"
 hooks = [{ id = "prettier", types_or = ["json", "yaml", "markdown"] }]
 
-# Self-lint: run otis-latex-lint on .tex files in the repo (none yet, but
+# Self-lint: run lastlint on .tex files in the repo (none yet, but
 # guards against accidentally committing broken .tex outside tests/fixtures/).
 [[repos]]
 repo = "local"
 hooks = [
   {
-    id = "otis-latex-lint",
+    id = "lastlint",
     name = "Evan's LaTeX style guide",
-    entry = "otis-latex-lint",
+    entry = "lastlint",
     language = "python",
     types = ["tex"],
     exclude = '^tests/fixtures/',
