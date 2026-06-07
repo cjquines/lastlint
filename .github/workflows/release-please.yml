@@ -3,7 +3,6 @@ name: Release Please
 on:
   push:
     branches: ["main"]
-  workflow_dispatch:
 
 permissions: {}
 
@@ -28,7 +27,7 @@ jobs:
     name: "publish to PyPI"
     needs: release-please
     runs-on: ubuntu-latest
-    if: ${{ needs.release-please.outputs.release_created || github.event_name == 'workflow_dispatch' }}
+    if: ${{ needs.release-please.outputs.release_created }}
     environment:
       name: pypi
       url: https://pypi.org/p/lastlint
