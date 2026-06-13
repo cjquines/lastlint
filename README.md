@@ -53,7 +53,7 @@ Fixable rules are marked with 🔧.
 
 | ID      | Rule from style guide                                |
 | ------- | ---------------------------------------------------- |
-| E001    | Line length must be ≤ 100                            |
+| E001    | Line length must be ≤ 120                            |
 | E002 🔧 | No literal `"`                                       |
 | E003 🔧 | Operators (`\sin` etc.) must be commands             |
 | E004 🔧 | No `\ldots`, `\cdots`, or `...`                      |

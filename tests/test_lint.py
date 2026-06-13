@@ -66,8 +66,8 @@ def test_suppression_pragma():
 
 
 def test_E001_skips_url_lines():
-    text = "  \\href{https://example.com/" + "x" * 100 + "}{link}\n"
-    assert len(text) > 101
+    text = "  \\href{https://example.com/" + "x" * 120 + "}{link}\n"
+    assert len(text) > 121
     assert "E001" not in rules(text)
 
 
@@ -150,8 +150,8 @@ def test_fix_E013_handles_nesting():
 
 
 def test_fix_E013_skips_overflow():
-    # A line that would exceed the 100-char limit once padded is left alone.
-    body = "\\ii " + "x" * 97  # 101 chars; +2 indent would make 103
+    # A line that would exceed the 120-char limit once padded is left alone.
+    body = "\\ii " + "x" * 117  # 121 chars; +2 indent would make 123
     text = f"\\begin{{itemize}}\n{body}\n\\end{{itemize}}\n"
     fixed = fix_text(text)
     assert f"\n{body}\n" in fixed  # untouched, no leading spaces added

@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterator
 
-MAX_LINE_LENGTH = 100
+MAX_LINE_LENGTH = 120
 
 # Operators that should always be typeset as commands (\sin, not sin).
 # Source: amsmath \DeclareMathOperator list; keep this conservative to avoid
