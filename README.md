@@ -11,7 +11,7 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/cjquines/lastlint
-    rev: v0.4.0 # x-release-please-version
+    rev: v0.4.1 # x-release-please-version
     hooks:
       - id: lastlint-fix
 ```
