@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/cjquines/lastlint/compare/v0.4.0...v0.4.1) (2026-06-13)
+
+
+### Bug Fixes
+
+* max line length 100 -&gt; 120 ([8856b6c](https://github.com/cjquines/lastlint/commit/8856b6cabbf0c585285489c2e48b1d5ddd525a22))
+
 ## [0.4.0](https://github.com/cjquines/lastlint/compare/v0.3.0...v0.4.0) (2026-05-30)
 
 
