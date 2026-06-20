@@ -21,10 +21,15 @@ use the `lastlint` hook id.
 
 ### Standalone
 
+Install from PyPI. Using [uv](https://docs.astral.sh/uv/) (recommended):
+
 ```sh
-pip install .
+uv tool install lastlint
 lastlint path/to/file.tex another.tex
 ```
+
+To run without installing: `uvx lastlint path/to/file.tex`.
+With `pip`: `pip install lastlint`.
 
 Multiple files are accepted, and glob patterns are expanded.
 
@@ -38,6 +43,75 @@ when piped or redirected it uses a plain
 format parseable by editors.
 Force either mode with `--color always` or `--color never`
 (also honors `NO_COLOR` and `FORCE_COLOR`).
+
+### Editor
+
+An optional language server exposes lastlint to compatible text editors.
+Install it with the `lsp` extra:
+
+```sh
+uv tool install 'lastlint[lsp]'
+# or: pip install 'lastlint[lsp]'
+```
+
+The server `lastlint-lsp`, over stdio,
+publishes diagnostics and implements formatting,
+so format-on-save will auto-fix LaTeX files.
+Pass ignored rules through `initializationOptions`,
+e.g. `{"ignore": ["E001", "E013"]}`.
+
+The setups below assume `lastlint-lsp` is globally installed.
+To skip a global install, replace the command with
+`uvx --from 'lastlint[lsp]' lastlint-lsp`.
+
+<details>
+<summary>Neovim</summary>
+
+0.11+, native `vim.lsp`:
+
+```lua
+vim.lsp.config('lastlint', {
+  cmd = { 'lastlint-lsp' },
+  filetypes = { 'tex', 'plaintex' },
+  root_markers = { '.git' },
+})
+vim.lsp.enable('lastlint')
+```
+
+</details>
+
+<details>
+<summary>Sublime Text</summary>
+
+The [LSP](https://lsp.sublimetext.io/) package, in `LSP.sublime-settings`:
+
+```json
+{
+  "clients": {
+    "lastlint": {
+      "enabled": true,
+      "command": ["lastlint-lsp"],
+      "selector": "text.tex.latex"
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary>Emacs</summary>
+
+[Eglot](https://www.gnu.org/software/emacs/manual/html_mono/eglot.html) (built
+in since 29) — then run `M-x eglot` in a TeX buffer:
+
+```elisp
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               '((latex-mode LaTeX-mode) . ("lastlint-lsp"))))
+```
+
+</details>
 
 ## Suppression
 
