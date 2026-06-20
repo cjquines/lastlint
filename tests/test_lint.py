@@ -90,7 +90,7 @@ def test_dollar_in_asy_is_not_flagged():
 @pytest.mark.parametrize(
     "snippet,rule",
     [
-        ("a" * 101, "E001"),
+        ("a" * 121, "E001"),
         ('Say "hi"', "E002"),
         ("$sin(x)$", "E003"),
         (r"$x \ldots y$", "E004"),
