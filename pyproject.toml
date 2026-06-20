@@ -12,14 +12,19 @@ license = "MIT"
 authors = [{ name = "CJ Quines" }]
 urls = { repository = "https://github.com/cjquines/lastlint" }
 
+[project.optional-dependencies]
+lsp = ["pygls>=1.3,<2", "lsprotocol>=2023.0.1"]
+
 [project.scripts]
 lastlint = "lastlint:main"
+lastlint-lsp = "lastlint_lsp:main"
 
 [dependency-groups]
-dev = ["prek", "pytest"]
+dev = ["prek", "pytest", { include-group = "lsp" }]
+lsp = ["pygls>=1.3,<2", "lsprotocol>=2023.0.1"]
 
 [tool.hatch.build.targets.wheel]
-include = ["lastlint.py"]
+include = ["lastlint.py", "lastlint_lsp.py"]
 
 [tool.hatch.build.targets.sdist]
-include = ["lastlint.py", "README.md", "tests/"]
+include = ["lastlint.py", "lastlint_lsp.py", "README.md", "tests/"]
