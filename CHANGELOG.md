@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/cjquines/lastlint/compare/v0.4.1...v0.5.0) (2026-06-20)
+
+
+### Features
+
+* add lsp server ([#7](https://github.com/cjquines/lastlint/issues/7)) ([5a5a2dc](https://github.com/cjquines/lastlint/commit/5a5a2dcd5146434e4a58fb298c943cef1fb6ceb3))
+
 ## [0.4.1](https://github.com/cjquines/lastlint/compare/v0.4.0...v0.4.1) (2026-06-13)
 
 
