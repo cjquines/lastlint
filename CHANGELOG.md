@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/cjquines/lastlint/compare/v0.5.0...v0.5.1) (2026-08-02)
+
+
+### Bug Fixes
+
+* **lsp:** only lint documents the editor opened with us ([e24f505](https://github.com/cjquines/lastlint/commit/e24f505f34d3c97f7cd93f12a25ac75ae567694d))
+
 ## [0.5.0](https://github.com/cjquines/lastlint/compare/v0.4.1...v0.5.0) (2026-06-20)
 
 
