@@ -3,7 +3,8 @@
 A thin server exposing two capabilities:
 
 * **Diagnostics** — runs `lint_text` on open/change/save and publishes one
-  `Diagnostic` per `Finding`.
+  `Diagnostic` per `Finding`. Only documents the editor opened with us are
+  looked at; see `_managed_source`.
 * **Formatting** — runs `fix_text` for `textDocument/formatting`, returning a
   single whole-document edit. This is what powers editor format-on-save.
 
@@ -116,9 +117,24 @@ def _build_server():
             codes = {str(c).strip().upper() for c in raw if str(c).strip()}
             ls.ignore = frozenset(codes & lastlint.ALL_RULES)
 
+    def _managed_source(ls: LastlintServer, uri: str) -> str | None:
+        """Text of a document the editor opened with us, else ``None``.
+
+        pygls' ``get_text_document`` falls back to reading the URI off disk
+        when the document was never opened, and editors do address us about
+        buffers we were never attached to: Neovim broadcasts ``didSave`` to
+        every client sharing a change-tracking sync kind and offset encoding,
+        attached or not. Linting those splatters LaTeX diagnostics over
+        unrelated files, and formatting one would replace a buffer wholesale
+        with a "fix" computed from a file we don't own.
+        """
+        doc = ls.workspace.text_documents.get(uri)
+        return doc.source if doc else None
+
     def _publish(ls: LastlintServer, uri: str) -> None:
-        doc = ls.workspace.get_text_document(uri)
-        ls.publish_diagnostics(uri, to_diagnostics(doc.source, ls.ignore))
+        source = _managed_source(ls, uri)
+        if source is not None:
+            ls.publish_diagnostics(uri, to_diagnostics(source, ls.ignore))
 
     @server.feature(t.TEXT_DOCUMENT_DID_OPEN)
     def on_open(ls: LastlintServer, params: t.DidOpenTextDocumentParams) -> None:
@@ -136,8 +152,10 @@ def _build_server():
     def on_format(
         ls: LastlintServer, params: t.DocumentFormattingParams
     ) -> list[t.TextEdit]:
-        doc = ls.workspace.get_text_document(params.text_document.uri)
-        return format_edits(doc.source, ls.ignore)
+        source = _managed_source(ls, params.text_document.uri)
+        if source is None:
+            return []
+        return format_edits(source, ls.ignore)
 
     return server
 
