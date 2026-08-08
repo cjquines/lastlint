@@ -295,7 +295,11 @@ def _e006_matches(line: str) -> Iterator[re.Match[str]]:
         # But `\textbf{x} .` has a genuine stray space — the `}` already
         # closed the argument — so only exempt tokens not ending in `}`.
         is_command = tok.startswith("\\") and tok[1:2].isalpha()
-        if not is_command or tok.endswith("}"):
+        # `& .` in an array/tabular/align row: the `.` is the cell's content,
+        # not punctuation, and the space after `&` is normal formatting. An
+        # escaped `\&` is a literal ampersand, so it doesn't get the pass.
+        is_cell_break = tok.endswith("&") and not tok.endswith("\\&")
+        if (not is_command or tok.endswith("}")) and not is_cell_break:
             yield m
 
 
