@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.2](https://github.com/cjquines/lastlint/compare/v0.5.1...v0.5.2) (2026-08-31)
+
+
+### Bug Fixes
+
+* don't flag e006 inside envs ([4c4019f](https://github.com/cjquines/lastlint/commit/4c4019f6b1b00d8b48f7bf9ca85ffca2dec05644))
+* ruff format ([c8a39b8](https://github.com/cjquines/lastlint/commit/c8a39b84b6c0c907ae62a3b91d601cfce694ef03))
+
 ## [0.5.1](https://github.com/cjquines/lastlint/compare/v0.5.0...v0.5.1) (2026-08-02)
 
 
