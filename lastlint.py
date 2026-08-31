@@ -10,20 +10,53 @@ import glob
 import os
 import re
 import sys
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterator
+from typing import Callable
 
 MAX_LINE_LENGTH = 120
 
 # Operators that should always be typeset as commands (\sin, not sin).
 # Source: amsmath \DeclareMathOperator list; keep this conservative to avoid
 # matching identifiers in prose that happen to be inside dollar signs.
-OPERATORS = (
-    "arccos arcsin arctan arg cos cosh cot coth csc deg det dim exp gcd hom "
-    "inf injlim ker lcm lg lim liminf limsup ln log max min Pr projlim sec "
-    "sin sinh sup tan tanh"
-).split()
+OPERATORS = [
+    "arccos",
+    "arcsin",
+    "arctan",
+    "arg",
+    "cos",
+    "cosh",
+    "cot",
+    "coth",
+    "csc",
+    "deg",
+    "det",
+    "dim",
+    "exp",
+    "gcd",
+    "hom",
+    "inf",
+    "injlim",
+    "ker",
+    "lcm",
+    "lg",
+    "lim",
+    "liminf",
+    "limsup",
+    "ln",
+    "log",
+    "max",
+    "min",
+    "Pr",
+    "projlim",
+    "sec",
+    "sin",
+    "sinh",
+    "sup",
+    "tan",
+    "tanh",
+]
 
 # Envs whose contents are not LaTeX prose and should be skipped.
 VERBATIM_ENVS = ("asy", "asydef", "verbatim", "lstlisting", "minted")
@@ -448,8 +481,7 @@ def rule_E013_indentation(src: Source) -> Iterator[Finding]:
             kind, env = m.group(1), m.group(2)
             if env not in NO_INDENT_ENVS:
                 depth += 1 if kind == "begin" else -1
-        if depth < 0:
-            depth = 0  # tolerate mismatched envs
+        depth = max(depth, 0)  # tolerate mismatched envs
 
 
 _FONT_CMD = r"\\(math[a-z]+|[A-Z]+)\b"
@@ -617,9 +649,12 @@ def fix_E004_old_dots(src: Source) -> str:
 
             # `2...x` -> `2\dots x`: a control word needs a space before an
             # alphanumeric, or it would be read as part of the command name.
-            if m.group().startswith(".") and m.end() < len(line):
-                if line[m.end()].isalnum():
-                    repl += " "
+            if (
+                m.group().startswith(".")
+                and m.end() < len(line)
+                and line[m.end()].isalnum()
+            ):
+                repl += " "
             out.append((m.start(), m.end(), repl))
         return out
 
@@ -732,8 +767,7 @@ def fix_E013_indentation(src: Source) -> str:
             kind, env = m.group(1), m.group(2)
             if env not in NO_INDENT_ENVS:
                 depth += 1 if kind == "begin" else -1
-        if depth < 0:
-            depth = 0
+        depth = max(depth, 0)
     return "\n".join(out)
 
 
