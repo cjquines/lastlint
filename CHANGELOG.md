@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.6.0](https://github.com/cjquines/lastlint/compare/v0.5.1...v0.6.0) (2026-10-13)
+
+
+### Features
+
+* add comma lists to E005 ([085e0ba](https://github.com/cjquines/lastlint/commit/085e0bad3dbe10d7fd47f2495c01dab4c8df6f73))
+
+
+### Bug Fixes
+
+* don't flag e006 inside envs ([4c4019f](https://github.com/cjquines/lastlint/commit/4c4019f6b1b00d8b48f7bf9ca85ffca2dec05644))
+* ruff format ([c8a39b8](https://github.com/cjquines/lastlint/commit/c8a39b84b6c0c907ae62a3b91d601cfce694ef03))
+* tabs-to-spaces, tikzpicture ([48b4504](https://github.com/cjquines/lastlint/commit/48b45045feed0c77934fc2f5e75cb07e7463d491))
+
 ## [0.5.1](https://github.com/cjquines/lastlint/compare/v0.5.0...v0.5.1) (2026-08-02)
 
 
