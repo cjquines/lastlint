@@ -96,6 +96,7 @@ def test_dollar_in_asy_is_not_flagged():
         (r"$x \ldots y$", "E004"),
         ("foo...bar", "E004"),
         (r"$x=3,$", "E005"),
+        ("$w, x, y, z$", "E005"),
         ("foo ,bar", "E006"),
         ("$x =3$", "E007"),
         ("$a||b$", "E009"),
@@ -227,6 +228,9 @@ def test_fix_is_idempotent_on_clean_fixture():
         ("$sin(x) + cos(y)$", r"$\sin(x) + \cos(y)$", "E003"),
         (r"$1, \ldots, n$", r"$1, \dots, n$", "E004"),
         (r"We have $x = 3.$ done", r"We have $x = 3$. done", "E005"),
+        ("$W$, $X$ on $AB, BC$", "$W$, $X$ on $AB$, $BC$", "E005"),
+        ("$a,b,c$ and $a_{i,j},P'$", "$a$, $b$, $c$ and $a_{i,j}$, $P'$", "E005"),
+        (r"lines $\ell_1, \ell_2$", r"lines $\ell_1$, $\ell_2$", "E005"),
         ("foo , bar ; baz", "foo, bar; baz", "E006"),
         ("$a||b$", r"$a\parallel b$", "E009"),
         (r"$a | b$", r"$a \mid b$", "E009"),
@@ -309,3 +313,19 @@ def test_ignore_skips_fixing():
 def test_fix_E010_alternates_pairs():
     text = "$$a$$ and $$b$$"
     assert fix_text(text) == r"\[a\] and \[b\]"
+
+
+@pytest.mark.parametrize(
+    "snippet",
+    [
+        "$f(a, b)$",
+        "$(x, y)$",
+        r"$\{1, 2\}$",
+        "$x, y > 0$",
+        r"$1, \dots, n$",
+        "$a+b, c$",
+        "$a_{i,j}$",
+    ],
+)
+def test_e005_math_commas_not_flagged(snippet: str):
+    assert not [f for f in lint_text(snippet) if f.rule == "E005"]

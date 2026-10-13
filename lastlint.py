@@ -299,11 +299,39 @@ def rule_E004_old_dots(src: Source) -> Iterator[Finding]:
             )
 
 
+# A "simple" list item: a variable-like token such as `x`, `AB`, `P'`, `a_1`,
+# `c^{2}`, `\ell_1`, `\angle A`. Anything with operators, relations, spaces
+# between tokens, or `\dots` is not simple, so `$x, y > 0$` and
+# `$1, \dots, n$` don't match.
+_E005_ARG = r"(?:\w|\{[^{}]*\})"
+_E005_ITEM = (
+    rf"(?:\\(?!dots|ldots|cdots)[A-Za-z]+\s*[A-Za-z0-9]*|[A-Za-z0-9]+)"
+    rf"(?:'|[_^]{_E005_ARG})*"
+)
+_E005_LIST_RE = re.compile(rf"\s*{_E005_ITEM}(?:\s*,\s*{_E005_ITEM})+\s*")
+
+
+def _e005_list_items(body: str) -> list[str] | None:
+    """Split `w, x, y, z` into its items if `body` is a list of simple items."""
+    if not _E005_LIST_RE.fullmatch(body):
+        return None
+    # Item tokens can contain commas only inside braces (`a_{i,j}`).
+    items, depth, start = [], 0, 0
+    for k, c in enumerate(body):
+        depth += (c == "{") - (c == "}")
+        if c == "," and depth == 0:
+            items.append(body[start:k].strip())
+            start = k + 1
+    items.append(body[start:].strip())
+    return items
+
+
 def rule_E005_math_punct(src: Source) -> Iterator[Finding]:
     # Grammatical punctuation immediately before the closing $ of inline math.
     # This is the common banned pattern: $x=3.$, $a,b,$.
     # Note: middle commas like $f(a,b)$ are mathematical, not grammatical,
     # and end with `)`, so they are not flagged.
+    # Also flags an English list written as one math span, `$w, x, y, z$`.
     for i, line in enumerate(src.masked_lines, 1):
         for s, e in find_inline_math(line):
             if e - s >= 3 and line[e - 2] in ",.":
@@ -313,6 +341,8 @@ def rule_E005_math_punct(src: Source) -> Iterator[Finding]:
                     e - 1,
                     f"grammatical {line[e - 2]!r} inside math; move outside $",
                 )
+            elif _e005_list_items(line[s + 1 : e - 1]):
+                yield Finding("E005", i, s + 1, "list inside math; write $a$, $b$, $c$")
 
 
 # ':' intentionally omitted: it has too many legitimate spaced uses
@@ -662,13 +692,16 @@ def fix_E004_old_dots(src: Source) -> str:
 
 
 def fix_E005_math_punct(src: Source) -> str:
-    """Move a trailing `.` or `,` from inside inline math to just after it."""
+    """Move a trailing `.` or `,` from inside inline math to just after it,
+    and split `$w, x, y, z$` into `$w$, $x$, $y$, $z$`."""
 
     def edits(_i: int, line: str) -> list[tuple[int, int, str]]:
         out = []
         for s, e in find_inline_math(line):
             if e - s >= 3 and line[e - 2] in ",.":
                 out.append((e - 2, e, "$" + line[e - 2]))
+            elif items := _e005_list_items(line[s + 1 : e - 1]):
+                out.append((s, e, ", ".join(f"${x}$" for x in items)))
         return out
 
     return _per_line_fix(src, edits)
