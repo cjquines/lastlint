@@ -59,7 +59,7 @@ OPERATORS = [
 ]
 
 # Envs whose contents are not LaTeX prose and should be skipped.
-VERBATIM_ENVS = ("asy", "asydef", "verbatim", "lstlisting", "minted")
+VERBATIM_ENVS = ("asy", "asydef", "tikzpicture", "verbatim", "lstlisting", "minted")
 
 SUPPRESS_RE = re.compile(r"%\s*lastlint:\s*disable=([A-Z0-9, ]+)")
 
@@ -732,7 +732,8 @@ def fix_E017_colon(src: Source) -> str:
 
 
 def fix_E013_indentation(src: Source) -> str:
-    """Pad under-indented lines inside indenting envs to ``2 * depth`` spaces.
+    """Pad under-indented lines inside indenting envs to ``2 * depth`` spaces,
+    converting leading tabs to spaces.
 
     Lines already at or beyond the expected indent are left untouched, so
     deeper hand-alignment (e.g. continuation lines) is preserved.
@@ -752,9 +753,13 @@ def fix_E013_indentation(src: Source) -> str:
         # ``line`` is comment-masked, so a comment-only line is blank here and
         # is left untouched — consistent with the rule, which won't flag it.
         if effective_depth > 0 and line.strip() and i not in src.verbatim_lines:
-            indent = len(raw) - len(raw.lstrip(" "))
+            # Leading tabs count as one indent level (2 spaces) each. The rule
+            # only counts spaces, so any tab-indented line gets rewritten.
+            stripped = raw.lstrip(" \t")
+            lead = raw[: len(raw) - len(stripped)].expandtabs(2)
+            raw = lead + stripped
+            indent = len(lead)
             expected = 2 * effective_depth
-            stripped = raw.lstrip(" ")
             # Don't pad a line past the E001 length limit: that would just
             # trade an E013 for an E001. Leave it for the author to rewrap;
             # E013 still reports it.

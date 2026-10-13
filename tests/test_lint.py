@@ -190,6 +190,24 @@ def test_content_after_end_document_is_not_linted():
     assert rules(text) == set()
 
 
+def test_fix_E013_converts_leading_tabs():
+    text = "\\begin{proof}\n\tone\n\t\ttwo\n  \\end{proof}\n"
+    fixed = fix_text(text)
+    assert fixed == "\\begin{proof}\n  one\n    two\n  \\end{proof}\n"
+    assert "E013" not in rules(fixed)
+
+
+def test_tikzpicture_is_skipped():
+    long = "\\draw " + "(0,0) -- " * 20 + "cycle;"
+    text = (
+        "\\begin{proof}\n  \\begin{tikzpicture}\n"
+        + long
+        + "\n  \\end{tikzpicture}\n\\end{proof}\n"
+    )
+    assert rules(text) == set()
+    assert fix_text(text) == text
+
+
 def test_fix_E013_skips_verbatim():
     text = "\\begin{itemize}\n\\begin{verbatim}\nfoo\n\\end{verbatim}\n\\end{itemize}\n"
     fixed = fix_text(text)

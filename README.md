@@ -168,11 +168,12 @@ and leaves a `\cdots` unresolved when neither side determines spacing.
 
 E013 checks every env except a small denylist:
 `document`, `center`, `quote`,
-and the verbatim envs (`asy`, `verbatim`, `lstlisting`, …).
+and the verbatim envs (`asy`, `tikzpicture`, `verbatim`, `lstlisting`, …).
 See `NO_INDENT_ENVS` in `lastlint.py` to adjust.
 
 The `--fix` pads under-indented lines inside indent envs to `2 * depth` spaces
-(already-correctly-indented or deeper lines are left alone).
+(already-correctly-indented or deeper lines are left alone),
+and converts leading tabs to 2 spaces each.
 
 ## Development
 
